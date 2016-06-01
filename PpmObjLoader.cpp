@@ -20,6 +20,7 @@
  */
 
 #include "PpmObjLoader.h"
+#include "ppm.h"
 
 #include <optixu/optixu_math_namespace.h>
 #include <ImageLoader.h>
@@ -139,9 +140,12 @@ void PpmObjLoader::createMaterial()
   Program closest_hit2 = m_context->createProgramFromPTXFile( path2, "ppass_closest_hit" );
   Program any_hit      = m_context->createProgramFromPTXFile( path3, "gather_any_hit" );
   m_material           = m_context->createMaterial();
-  m_material->setClosestHitProgram( 0u, closest_hit1 );
-  m_material->setClosestHitProgram( 1u, closest_hit2 );
-  m_material->setAnyHitProgram( 2u, any_hit );
+  m_material->setClosestHitProgram( rtpass_ray_type, closest_hit1 );
+  m_material->setClosestHitProgram( ppass_and_gather_ray_type, closest_hit2 );
+  m_material->setAnyHitProgram( shadow_ray_type, any_hit );
+
+  m_material->setClosestHitProgram(radiance_in_participating_medium, closest_hit1);
+  m_material->setClosestHitProgram(photon_in_participating_medium, closest_hit2);
 }
 
 
