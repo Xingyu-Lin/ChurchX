@@ -20,6 +20,7 @@
  */
 
 #include <optixu/optixu_math_namespace.h>
+#include <cstdlib>
 
 template<unsigned int N>
 static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsigned int val1 )
@@ -90,8 +91,8 @@ static __host__ __inline__ unsigned int mwc()
 
 static __host__ __inline__ unsigned int random1u()
 {
-#if 0
-  return rand();
+#if 1
+  return rand()*rand();
 #else
   return mwc();
 #endif

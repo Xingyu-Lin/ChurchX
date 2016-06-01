@@ -26,9 +26,9 @@ optix::Material ParticipatingMedium::getOptixMaterial(optix::Context & context, 
 
 		m_optixMaterial = context->createMaterial();
 		m_optixMaterial->setClosestHitProgram(RayTypes::rtpass_ray_type, radianceProgram);
-		//m_optixMaterial->setClosestHitProgram(RayTypes::radiance_in_participating_medium, radianceProgram);
+		m_optixMaterial->setClosestHitProgram(RayTypes::radiance_in_participating_medium, radianceProgram);
 		m_optixMaterial->setClosestHitProgram(RayTypes::ppass_and_gather_ray_type, photonProgram);
-		//m_optixMaterial->setClosestHitProgram(RayTypes::photon_in_participating_medium, photonProgram);
+		m_optixMaterial->setClosestHitProgram(RayTypes::photon_in_participating_medium, photonProgram);
 
 		this->registerMaterialWithShadowProgram(context, m_optixMaterial);
 

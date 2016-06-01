@@ -32,6 +32,7 @@
 #include <ImageLoader.h>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <algorithm>
 #include <limits>
 #include "ppm.h"
@@ -144,9 +145,9 @@ private:
     rtpass,
     ppass,
     gather,
+    clear_radiance_photon,
     numPrograms
   };
-
   unsigned int  m_frame_number;
   bool          m_display_debug_buffer;
   bool          m_print_timings;
@@ -175,14 +176,14 @@ private:
   const static unsigned int WIDTH;
   const static unsigned int HEIGHT;
   const static unsigned int MAX_PHOTON_COUNT;
-
+  const static float PPMRadius;
 
 };
 
 const unsigned int ProgressivePhotonScene::WIDTH  = 768u;
 const unsigned int ProgressivePhotonScene::HEIGHT = 768u;
 const unsigned int ProgressivePhotonScene::MAX_PHOTON_COUNT = 2u;
-
+const float ProgressivePhotonScene::PPMRadius = 0.04f;
 
 bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
 {
@@ -378,15 +379,22 @@ void ProgressivePhotonScene::initScene( InitialCameraData& camera_data )
       m_context["volumetricPhotonsRoot"]->set(m_volumetricPhotonsRoot);
     }
 
+    // Clear Volumetric Photons Program
+
+    {
+      std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonInitialize.cu");
+      Program program = m_context->createProgramFromPTXFile( ptx_path, "kernel" );
+      m_context->setRayGenerationProgram(clear_radiance_photon, program );
+    }
+
     optix::Aabb aabb;
-    loadObjGeometry( "wedding-band.obj", aabb);
 
     GeometryGroup geometry_group = m_context->createGeometryGroup();
     std::string full_pathRing = std::string(sutilSamplesDir()) + "/progressivePhotonMap/wedding-band.obj";
     PpmObjLoader loader(full_pathRing, m_context, geometry_group, m_accel_desc);
     loader.load();
     aabb = loader.getSceneBBox();
-
+    aabb.set(make_float3(-100,-100,-100),make_float3(100,100,100));
     //Participating media
     {
       ParticipatingMedium partmedium = ParticipatingMedium(0.05, 0.01);
@@ -653,27 +661,46 @@ void ProgressivePhotonScene::trace( const RayGenCameraData& camera_data )
 
   m_frame_number = m_camera_changed ? 0u : m_frame_number+1;
   m_context["frame_number"]->setFloat( static_cast<float>(m_frame_number) );
-  if ( m_camera_changed ) {
+  if ( m_camera_changed )
+  {
     m_camera_changed = false;
-    m_context["rtpass_eye"]->setFloat( camera_data.eye );
-    m_context["rtpass_U"]->setFloat( camera_data.U );
-    m_context["rtpass_V"]->setFloat( camera_data.V );
-    m_context["rtpass_W"]->setFloat( camera_data.W );
-  
+    m_context["rtpass_eye"]->setFloat(camera_data.eye);
+    m_context["rtpass_U"]->setFloat(camera_data.U);
+    m_context["rtpass_V"]->setFloat(camera_data.V);
+    m_context["rtpass_W"]->setFloat(camera_data.W);
+
     // Trace viewing rays
     if (m_print_timings) std::cerr << "Starting RT pass ... ";
     std::cerr.flush();
     double t0, t1;
-    sutilCurrentTime( &t0 );
-    m_context->launch( rtpass,
+    sutilCurrentTime(&t0);
+    m_context->launch(rtpass,
                       static_cast<unsigned int>(buffer_width),
-                      static_cast<unsigned int>(buffer_height) );
-    sutilCurrentTime( &t1 );
+                      static_cast<unsigned int>(buffer_height));
+    sutilCurrentTime(&t1);
     if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
-    m_context["total_emitted"]->setFloat(  0.0f );
-    m_iteration_count=1;
+    m_context["total_emitted"]->setFloat(0.0f);
+    m_iteration_count = 1;
+  }
+  Photon* debug_buffer = reinterpret_cast<Photon*>(m_volumetricPhotonsBuffer->map());
+  for (int i=0; i<100; ++i)
+    std::cout<<i<<" "<<debug_buffer[i].position.x<<" "<<debug_buffer[i].position.y<<" "<<debug_buffer[i].position.z<<std::endl;
+  m_volumetricPhotonsBuffer->unmap();
+  // Clear volume photons
+  m_context["volumetricRadius"]->setFloat(0.033/0.033*PPMRadius);
+  {
+    //nvtx::ScopedRange r( "OptixEntryPoint::PPM_CLEAR_VOLUMETRIC_PHOTONS_PASS" );
+    m_context->launch( clear_radiance_photon, NUM_VOLUMETRIC_PHOTONS);
   }
 
+  if (0)
+  {
+    debug_buffer = reinterpret_cast<Photon *>(m_volumetricPhotonsBuffer->map());
+    for (int i = 0; i < 100; ++i)
+      std::cout << i << " " << debug_buffer[i].position.x << " " << debug_buffer[i].position.y << " " <<
+      debug_buffer[i].position.z << std::endl;
+    m_volumetricPhotonsBuffer->unmap();
+  }
   // Trace photons
   if (m_print_timings) std::cerr << "Starting photon pass   ... ";
   Buffer photon_rnd_seeds = m_context["photon_rnd_seeds"]->getBuffer();
@@ -990,8 +1017,9 @@ void printUsageAndExit( const std::string& argv0, bool doExit = true )
 
 int main( int argc, char** argv )
 {
-  GLUTDisplay::init( argc, argv );
 
+  GLUTDisplay::init( argc, argv );
+  srand(time(0));
   bool print_timings = false;
   bool display_debug_buffer = false;
   bool cornell_box = false;
