@@ -717,6 +717,7 @@ void ProgressivePhotonScene::trace( const RayGenCameraData& camera_data )
   // floating point addition errors when the number of photons gets sufficiently large
   // (the error of adding two floating point numbers when the mantissa bits no longer
   // overlap).
+  // TODO:
   m_context["total_emitted"]->setFloat( static_cast<float>((unsigned long long)m_iteration_count*m_photon_launch_width*m_photon_launch_height) );
   sutilCurrentTime( &t1 );
   if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;

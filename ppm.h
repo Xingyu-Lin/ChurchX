@@ -71,6 +71,8 @@ struct HitRecord
   float         photon_count;     // Client TODO: should be moved clientside?
   optix::float3 flux;             //
   float         accum_atten;
+  optix::float3 volumetricRadiance;
+  float         padding;
 };
 
 
@@ -79,7 +81,8 @@ struct PackedHitRecord
   optix::float4 a;   // position.x, position.y, position.z, normal.x
   optix::float4 b;   // normal.y,   normal.z,   atten_Kd.x, atten_Kd.y
   optix::float4 c;   // atten_Kd.z, flags,      radius2,    photon_count
-  optix::float4 d;   // flux.x,     flux.y,     flux.z,     accum_atten 
+  optix::float4 d;   // flux.x,     flux.y,     flux.z,     accum_atten
+  optix::float4 e;   // volumetricRadiance.x, volumetricRadiance.y, volumetricRadiance.z, padding
 };
 
 

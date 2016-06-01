@@ -128,7 +128,8 @@ RT_PROGRAM void rtpass_closest_hit()
     rec.photon_count = 0;
     rec.accum_atten = 0.0f;
     rec.flux = make_float3(0.0f, 0.0f, 0.0f);
-    
+    rec.volumetricRadiance = hit_prd.volumetricRadiance;
+
     rtpass_output_buffer[launch_index] = rec;
   } else {
     // Make reflection ray

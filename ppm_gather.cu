@@ -93,6 +93,7 @@ RT_PROGRAM void gather()
   float  rec_photon_count = rec.c.w;
   float3 rec_flux     = make_float3( rec.d.x, rec.d.y, rec.d.z );
   float  rec_accum_atten = rec.d.w;
+  float3 rec_volumetricRadiance = make_float3( rec.e.x, rec.e.y, rec.e.z );
 
   // Check if this is hit point lies on an emitter or hit background 
   if( !(rec_flags & PPM_HIT) || rec_flags & PPM_OVERFLOW ) {
@@ -218,7 +219,7 @@ RT_PROGRAM void gather()
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
   
   rtpass_output_buffer[launch_index] = rec;
-  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd;
+  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd + rec_volumetricRadiance/total_emitted;
   output_buffer[launch_index] = make_float4(final_color);
   if(use_debug_buffer == 1)
     debug_buffer[launch_index] = make_float4( loop_iter, new_R2, new_N, M );
