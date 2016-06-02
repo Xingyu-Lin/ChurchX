@@ -49,6 +49,7 @@ if(GLUT_FOUND AND OPENGL_FOUND)
     #VHit.cu
     #VInit.cu
     ParticipatingMedium.cu
+    HitRecordInitialize.cu
     )
 
 else()

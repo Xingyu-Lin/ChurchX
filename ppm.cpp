@@ -146,6 +146,7 @@ private:
     ppass,
     gather,
     clear_radiance_photon,
+    clear_hitRecord,
     numPrograms
   };
   unsigned int  m_frame_number;
@@ -178,12 +179,16 @@ private:
   const static unsigned int MAX_PHOTON_COUNT;
   const static float PPMRadius;
 
+  const static float m_sigma_a;
+  const static float m_sigma_s;
 };
 
 const unsigned int ProgressivePhotonScene::WIDTH  = 768u;
 const unsigned int ProgressivePhotonScene::HEIGHT = 768u;
 const unsigned int ProgressivePhotonScene::MAX_PHOTON_COUNT = 2u;
 const float ProgressivePhotonScene::PPMRadius = 0.04f;
+const float ProgressivePhotonScene::m_sigma_a = 0.05f;
+const float ProgressivePhotonScene::m_sigma_s = 0.01f;
 
 bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
 {
@@ -227,6 +232,7 @@ bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
 
 void ProgressivePhotonScene::initScene( InitialCameraData& camera_data )
 {
+  rtContextSetPrintEnabled(m_context->get(), true);
   // There's a performance advantage to using a device that isn't being used as a display.
   // We'll take a guess and pick the second GPU if the second one has the same compute
   // capability as the first.
@@ -294,6 +300,13 @@ void ProgressivePhotonScene::initScene( InitialCameraData& camera_data )
     m_context["rtpass_bad_color"]->setFloat( 0.0f, 1.0f, 0.0f );
     m_context->setMissProgram( rtpass, m_context->createProgramFromPTXFile( ptx_path, "rtpass_miss" ) );
     m_context["rtpass_bg_color"]->setFloat( make_float3( 0.34f, 0.55f, 0.85f ) );
+  }
+
+  // clear hit record
+  {
+    std::string ptx_path = ptxpath("progressivePhotonMap", "HitRecordInitialize.cu");
+    Program program = m_context->createProgramFromPTXFile( ptx_path, "kernel" );
+    m_context->setRayGenerationProgram(clear_hitRecord, program );
   }
 
   // Set up camera
@@ -413,15 +426,16 @@ void ProgressivePhotonScene::initScene( InitialCameraData& camera_data )
       optix::Material ptM = partmedium.getOptixMaterial(m_context, partmedium_ptxpath);
 
       GeometryInstance gi = m_context->createGeometryInstance(geometry, &ptM, &ptM + 1);
-
+      gi["sigma_a"]->setFloat(m_sigma_a);
+      gi["sigma_s"]->setFloat(m_sigma_s);
       optix::GeometryGroup group = m_context->createGeometryGroup();
       group->setChildCount(1);
       group->setChild(0, gi);
       optix::Acceleration a = m_context->createAcceleration("NoAccel", "NoAccel");
       group->setAcceleration(a);
 
-      geometry_group->setChildCount(geometry_group->getChildCount() + 1);
-      geometry_group->setChild(geometry_group->getChildCount() - 1, gi);
+      //geometry_group->setChildCount(geometry_group->getChildCount() + 1);
+      //geometry_group->setChild(geometry_group->getChildCount() - 1, gi);
     }
 
 
@@ -668,24 +682,20 @@ void ProgressivePhotonScene::trace( const RayGenCameraData& camera_data )
     m_context["rtpass_U"]->setFloat(camera_data.U);
     m_context["rtpass_V"]->setFloat(camera_data.V);
     m_context["rtpass_W"]->setFloat(camera_data.W);
-
-    // Trace viewing rays
-    if (m_print_timings) std::cerr << "Starting RT pass ... ";
-    std::cerr.flush();
-    double t0, t1;
-    sutilCurrentTime(&t0);
-    m_context->launch(rtpass,
+    m_context->launch(clear_hitRecord,
                       static_cast<unsigned int>(buffer_width),
                       static_cast<unsigned int>(buffer_height));
-    sutilCurrentTime(&t1);
-    if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
-    m_context["total_emitted"]->setFloat(0.0f);
     m_iteration_count = 1;
+    m_context["total_emitted"]->setFloat(0.0f);
   }
-  Photon* debug_buffer = reinterpret_cast<Photon*>(m_volumetricPhotonsBuffer->map());
-  for (int i=0; i<100; ++i)
-    std::cout<<i<<" "<<debug_buffer[i].position.x<<" "<<debug_buffer[i].position.y<<" "<<debug_buffer[i].position.z<<std::endl;
-  m_volumetricPhotonsBuffer->unmap();
+  if (0)
+  {
+    Photon *debug_buffer = reinterpret_cast<Photon *>(m_volumetricPhotonsBuffer->map());
+    for (int i = 0; i < 100; ++i)
+      std::cout << i << " " << debug_buffer[i].position.x << " " << debug_buffer[i].position.y << " " <<
+      debug_buffer[i].position.z << std::endl;
+    m_volumetricPhotonsBuffer->unmap();
+  }
   // Clear volume photons
   m_context["volumetricRadius"]->setFloat(0.033/0.033*PPMRadius);
   {
@@ -695,7 +705,7 @@ void ProgressivePhotonScene::trace( const RayGenCameraData& camera_data )
 
   if (0)
   {
-    debug_buffer = reinterpret_cast<Photon *>(m_volumetricPhotonsBuffer->map());
+    Photon *debug_buffer = reinterpret_cast<Photon *>(m_volumetricPhotonsBuffer->map());
     for (int i = 0; i < 100; ++i)
       std::cout << i << " " << debug_buffer[i].position.x << " " << debug_buffer[i].position.y << " " <<
       debug_buffer[i].position.z << std::endl;
@@ -713,6 +723,8 @@ void ProgressivePhotonScene::trace( const RayGenCameraData& camera_data )
   m_context->launch( ppass,
                     static_cast<unsigned int>(m_photon_launch_width),
                     static_cast<unsigned int>(m_photon_launch_height) );
+
+  m_volumetricPhotonsRoot->getAcceleration()->markDirty();
   // By computing the total number of photons as an unsigned long long we avoid 32 bit
   // floating point addition errors when the number of photons gets sufficiently large
   // (the error of adding two floating point numbers when the mantissa bits no longer
@@ -728,6 +740,19 @@ void ProgressivePhotonScene::trace( const RayGenCameraData& camera_data )
   createPhotonMap();
   sutilCurrentTime( &t1 );
   if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
+
+  // Trace viewing rays
+  {
+    if (m_print_timings) std::cerr << "Starting RT pass ... ";
+    std::cerr.flush();
+    double t0, t1;
+    sutilCurrentTime(&t0);
+    //m_context->launch(rtpass,
+      //                static_cast<unsigned int>(buffer_width),
+        //              static_cast<unsigned int>(buffer_height));
+    sutilCurrentTime(&t1);
+    if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
+  }
 
   // Shade view rays by gathering photons
   if (m_print_timings) std::cerr << "Starting gather pass   ... ";

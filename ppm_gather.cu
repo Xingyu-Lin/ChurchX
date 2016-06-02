@@ -175,7 +175,7 @@ RT_PROGRAM void gather()
   float3 new_flux = ( rec_flux + flux_M ) * reduction_factor2;
   rec.d = make_float4( new_flux ); // set rec.flux
   float3 indirect_flux = 1.0f / ( M_PIf * new_R2 ) * new_flux / total_emitted;
-
+  //rtPrintf("%f\n", new_flux.x);
   // Compute direct
   float3 point_on_light;
   float dist_scale;
@@ -219,7 +219,10 @@ RT_PROGRAM void gather()
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
   
   rtpass_output_buffer[launch_index] = rec;
-  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd + rec_volumetricRadiance/total_emitted;
+  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd ;//+ rec_volumetricRadiance/total_emitted;
+  float3 tmp = rec_volumetricRadiance/total_emitted;
+  //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,
+    //      tmp.x, tmp.y, tmp.z);
   output_buffer[launch_index] = make_float4(final_color);
   if(use_debug_buffer == 1)
     debug_buffer[launch_index] = make_float4( loop_iter, new_R2, new_N, M );

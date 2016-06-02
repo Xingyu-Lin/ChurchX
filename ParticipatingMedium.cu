@@ -21,7 +21,6 @@ rtDeclareVariable(rtObject,      top_object, , );
 
 rtDeclareVariable(float, sigma_a, , );
 rtDeclareVariable(float, sigma_s, , );
-rtDeclareVariable(uint, max_photon_count, , );
 
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
@@ -120,6 +119,7 @@ RT_PROGRAM void closestHitPhoton()
     }
 
     float sample = rnd_float_from_uint2(photonPrd.sample);
+
     float scatterLocationT = - logf(1-sample)/sigma_t;
     float3 scatterPosition = hitPoint + scatterLocationT*ray.direction;
     int depth = photonPrd.ray_depth;
@@ -138,11 +138,10 @@ RT_PROGRAM void closestHitPhoton()
     {
         const float scatterAlbedo = sigma_s/sigma_t;
 
-        if (photonPrd.sample.x + photonPrd.sample.y >= scatterAlbedo)
+        if (sample >= scatterAlbedo)
         {
             return;
         }
-
         //photonPrd.power *= scatterAlbedo;
 
         // Store photon at scatter location

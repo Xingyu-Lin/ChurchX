@@ -105,7 +105,7 @@ RT_PROGRAM void rtpass_closest_hit()
 
   if( fmaxf( Kd ) > 0.0f ) { 
     // We hit a diffuse surface; record hit and return
-    HitRecord rec;
+    HitRecord rec = rtpass_output_buffer[ launch_index ];;
     rec.position = hit_point; 
     rec.normal = ffnormal;
     if( !use_grid ) {
@@ -123,13 +123,6 @@ RT_PROGRAM void rtpass_closest_hit()
         rec.attenuated_Kd = Kd * hit_prd.attenuation;
     }
     rec.flags = PPM_HIT;
-
-    rec.radius2 = rtpass_default_radius2;
-    rec.photon_count = 0;
-    rec.accum_atten = 0.0f;
-    rec.flux = make_float3(0.0f, 0.0f, 0.0f);
-    rec.volumetricRadiance = hit_prd.volumetricRadiance;
-
     rtpass_output_buffer[launch_index] = rec;
   } else {
     // Make reflection ray
