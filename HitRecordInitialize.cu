@@ -20,5 +20,7 @@ RT_PROGRAM void kernel()
     rec.photon_count = 0;
     rec.accum_atten = 0.0f;
     rec.flux = make_float3(0.0f, 0.0f, 0.0f);
+    rec.accum_atten = 0.0f;
+    rec.volumetricRadiance = make_float3(0.0f);
     rtpass_output_buffer[launchIndex] = rec;
 }

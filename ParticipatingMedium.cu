@@ -67,19 +67,21 @@ RT_PROGRAM void closestHitRadiance()
 
         // Multiply existing volumetric transmittance with current transmittance, and add gathered volumetric radiance
         // from this path
-
+        float3 tmp = hitPrd.volumetricRadiance;
         hitPrd.volumetricRadiance *= transmittance;
         hitPrd.volumetricRadiance += attenSaved*volRadiancePrd.radiance;
         hitPrd.attenuation *= transmittance;
+
     }
     else
     {
         // We are escaping the boundary of the participating medium, so we'll compute the attenuation and volumetric radiance for the remaining path
         // and deliver it to a parent stack frame.
         Ray newRay = Ray(hitPoint, ray.direction, rtpass_ray_type, 0.01);
+        //if (hitPrd.volumetricRadiance.x>0)
+          //  rtPrintf("hello\n");
         rtTrace(top_object, newRay, hitPrd);
     }
-
     hitPrd.lastTHit = tHitStack;
 
 }

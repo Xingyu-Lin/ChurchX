@@ -28,6 +28,7 @@ RT_PROGRAM void anyHitRadiance()
     if(t < ray.tmax && t > ray.tmin)
     {
         volRadiancePrd.radiance += (1/(M_PIf*volumetricRadius*volumetricRadius)) * photonPower * exp(-volRadiancePrd.sigma_t*t) * (1.f/(4.f*M_PIf));
+        //rtPrintf("%f %f %f\n", volumetricRadius, photonPower.x, (1/(M_PIf*volumetricRadius*volumetricRadius)) * photonPower.x * exp(-volRadiancePrd.sigma_t*t) * (1.f/(4.f*M_PIf)));
         volRadiancePrd.numHits++;
     }
     rtIgnoreIntersection();

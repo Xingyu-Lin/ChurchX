@@ -65,8 +65,11 @@ RT_PROGRAM void rtpass_camera()
   HitPRD prd;
   // rec.ray_dir = ray_direction; // set in rtpass_closest_hit
   prd.attenuation = make_float3( 1.0f );
-  prd.ray_depth   = 0u; 
+  prd.ray_depth   = 0u;
+  prd.volumetricRadiance = make_float3(0.0f);
   rtTrace( top_object, ray, prd );
+  rtpass_output_buffer[launch_index].volumetricRadiance = prd.volumetricRadiance;
+
 }
 
 // 
@@ -103,7 +106,7 @@ RT_PROGRAM void rtpass_closest_hit()
   float3 ffnormal     = faceforward( world_shading_normal, -direction, world_geometric_normal );
   float3 hit_point    = origin + t_hit*direction;
 
-  if( fmaxf( Kd ) > 0.0f ) { 
+  if( fmaxf( Kd ) > 0.0f ) {
     // We hit a diffuse surface; record hit and return
     HitRecord rec = rtpass_output_buffer[ launch_index ];;
     rec.position = hit_point; 
@@ -123,6 +126,7 @@ RT_PROGRAM void rtpass_closest_hit()
         rec.attenuated_Kd = Kd * hit_prd.attenuation;
     }
     rec.flags = PPM_HIT;
+    //rtPrintf("%f %f %f\n", rec.attenuated_Kd.x, rec.attenuated_Kd.y, rec.attenuated_Kd.z);
     rtpass_output_buffer[launch_index] = rec;
   } else {
     // Make reflection ray

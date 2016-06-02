@@ -216,13 +216,15 @@ RT_PROGRAM void gather()
   if( light_atten < 0.0f ) light_atten = 0.0f;   // TODO Shouldnt be needed but we get acne near light w/out it
   rec.d.w = rec_accum_atten + light_atten;
   float avg_atten = rec.d.w / (frame_number+1.0f);
+  //rtPrintf("%f\n",frame_number);
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
-  
   rtpass_output_buffer[launch_index] = rec;
-  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd; //+ rec_volumetricRadiance/total_emitted;
-  float3 tmp = rec_volumetricRadiance/total_emitted;
+  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd + rec_volumetricRadiance/total_emitted;
+  float3 tmp =  rec_volumetricRadiance/total_emitted;
+  if (rec_volumetricRadiance.x>0)
+    rtPrintf("%f\n", rec_volumetricRadiance.x);
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,
-    //      tmp.x, tmp.y, tmp.z);
+    //                       tmp.x, tmp.y, tmp.z);
   output_buffer[launch_index] = make_float4(final_color);
   if(use_debug_buffer == 1)
     debug_buffer[launch_index] = make_float4( loop_iter, new_R2, new_N, M );

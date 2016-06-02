@@ -186,9 +186,9 @@ private:
 const unsigned int ProgressivePhotonScene::WIDTH  = 768u;
 const unsigned int ProgressivePhotonScene::HEIGHT = 768u;
 const unsigned int ProgressivePhotonScene::MAX_PHOTON_COUNT = 2u;
-const float ProgressivePhotonScene::PPMRadius = 0.04f;
-const float ProgressivePhotonScene::m_sigma_a = 0.05f;
-const float ProgressivePhotonScene::m_sigma_s = 0.01f;
+const float ProgressivePhotonScene::PPMRadius = 0.4f;
+const float ProgressivePhotonScene::m_sigma_a = 0.00025f;
+const float ProgressivePhotonScene::m_sigma_s = 0.0005f;
 
 bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
 {
@@ -403,16 +403,14 @@ void ProgressivePhotonScene::initScene( InitialCameraData& camera_data )
     optix::Aabb aabb;
 
     GeometryGroup geometry_group = m_context->createGeometryGroup();
-    std::string full_pathRing = std::string(sutilSamplesDir()) + "/progressivePhotonMap/wedding-band.obj";
+    std::string full_pathRing = std::string(sutilSamplesDir()) + "/progressivePhotonMap/zid_vani.obj";
     PpmObjLoader loader(full_pathRing, m_context, geometry_group, m_accel_desc);
     loader.load();
-    aabb = loader.getSceneBBox();
-    aabb.set(make_float3(-100,-100,-100),make_float3(100,100,100));
     //Participating media
     {
       ParticipatingMedium partmedium = ParticipatingMedium(0.05, 0.01);
       optix::Aabb box = aabb;
-
+      box.set(make_float3(-200,-200,-200),make_float3(200,200,200));
       optix::Geometry geometry = m_context->createGeometry();
 
       //AABInstance participatingMediumCube (partmedium, box); ==
@@ -434,8 +432,8 @@ void ProgressivePhotonScene::initScene( InitialCameraData& camera_data )
       optix::Acceleration a = m_context->createAcceleration("NoAccel", "NoAccel");
       group->setAcceleration(a);
 
-      //  geometry_group->setChildCount(geometry_group->getChildCount() + 1);
-      //geometry_group->setChild(geometry_group->getChildCount() - 1, gi);
+      geometry_group->setChildCount(geometry_group->getChildCount() + 1);
+      geometry_group->setChild(geometry_group->getChildCount() - 1, gi);
     }
 
 
@@ -674,6 +672,7 @@ void ProgressivePhotonScene::trace( const RayGenCameraData& camera_data )
   output_buffer->getSize( buffer_width, buffer_height );
 
   m_frame_number = m_camera_changed ? 0u : m_frame_number+1;
+
   m_context["frame_number"]->setFloat( static_cast<float>(m_frame_number) );
   if ( m_camera_changed )
   {
