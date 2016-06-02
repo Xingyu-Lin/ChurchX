@@ -434,7 +434,7 @@ void ProgressivePhotonScene::initScene( InitialCameraData& camera_data )
       optix::Acceleration a = m_context->createAcceleration("NoAccel", "NoAccel");
       group->setAcceleration(a);
 
-      //geometry_group->setChildCount(geometry_group->getChildCount() + 1);
+      //  geometry_group->setChildCount(geometry_group->getChildCount() + 1);
       //geometry_group->setChild(geometry_group->getChildCount() - 1, gi);
     }
 
@@ -747,9 +747,9 @@ void ProgressivePhotonScene::trace( const RayGenCameraData& camera_data )
     std::cerr.flush();
     double t0, t1;
     sutilCurrentTime(&t0);
-    //m_context->launch(rtpass,
-      //                static_cast<unsigned int>(buffer_width),
-        //              static_cast<unsigned int>(buffer_height));
+    m_context->launch(rtpass,
+                      static_cast<unsigned int>(buffer_width),
+                      static_cast<unsigned int>(buffer_height));
     sutilCurrentTime(&t1);
     if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
   }

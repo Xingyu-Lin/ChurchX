@@ -219,7 +219,7 @@ RT_PROGRAM void gather()
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
   
   rtpass_output_buffer[launch_index] = rec;
-  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd ;//+ rec_volumetricRadiance/total_emitted;
+  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd; //+ rec_volumetricRadiance/total_emitted;
   float3 tmp = rec_volumetricRadiance/total_emitted;
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,
     //      tmp.x, tmp.y, tmp.z);
