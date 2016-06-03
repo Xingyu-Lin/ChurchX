@@ -42,7 +42,6 @@ rtBuffer<uint2, 2>               photon_rnd_seeds;
 rtDeclareVariable(uint,          max_depth, , );
 rtDeclareVariable(uint,          max_photon_count, , );
 rtDeclareVariable(PPMLight,      light , , );
-
 rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
 
 

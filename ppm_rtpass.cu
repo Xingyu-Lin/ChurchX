@@ -45,7 +45,6 @@ rtDeclareVariable(float3,        rtpass_V, , );
 rtDeclareVariable(float3,        rtpass_W, , );
 rtDeclareVariable(uint2,      launch_index, rtLaunchIndex, );
 
-
 RT_PROGRAM void rtpass_camera()
 {
   float2 screen = make_float2( rtpass_output_buffer.size() );
@@ -89,6 +88,10 @@ rtDeclareVariable(HitPRD, hit_prd, rtPayload, );
 rtDeclareVariable(optix::Ray, ray,          rtCurrentRay, );
 rtDeclareVariable(float,      t_hit,        rtIntersectionDistance, );
 
+rtTextureSampler<float4, 2>      diffuse_map;
+rtDeclareVariable(float, diffuse_map_scale, , );
+rtDeclareVariable(float3, texcoord, attribute texcoord, );
+
 RT_PROGRAM void rtpass_closest_hit()
 {
   // Check if this is a light source
@@ -126,6 +129,7 @@ RT_PROGRAM void rtpass_closest_hit()
         rec.attenuated_Kd = Kd * hit_prd.attenuation;
     }
     rec.flags = PPM_HIT;
+	rec.attenuated_Kd += make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
     //rtPrintf("%f %f %f\n", rec.attenuated_Kd.x, rec.attenuated_Kd.y, rec.attenuated_Kd.z);
     rtpass_output_buffer[launch_index] = rec;
   } else {

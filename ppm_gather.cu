@@ -48,7 +48,6 @@ rtDeclareVariable(PPMLight,      light , , );
 rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
 rtDeclareVariable(ShadowPRD, shadow_prd, rtPayload, );
 
-
 static __device__ __inline__ 
 void accumulatePhoton( const PackedPhotonRecord& photon,
                        const float3& rec_normal,
@@ -78,7 +77,6 @@ void accumulatePhoton( const PackedPhotonRecord& photon,
 #else
 #define check( condition, color )
 #endif
-
 
 #define MAX_DEPTH 20 // one MILLION photons
 RT_PROGRAM void gather()
@@ -217,12 +215,15 @@ RT_PROGRAM void gather()
   rec.d.w = rec_accum_atten + light_atten;
   float avg_atten = rec.d.w / (frame_number+1.0f);
   //rtPrintf("%f\n",frame_number);
+
+
+  //rec_atten_Kd += make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
   rtpass_output_buffer[launch_index] = rec;
   float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd + rec_volumetricRadiance/total_emitted;
   float3 tmp =  rec_volumetricRadiance/total_emitted;
-  if (rec_volumetricRadiance.x>0)
-    rtPrintf("%f\n", rec_volumetricRadiance.x);
+  //if (rec_volumetricRadiance.x>0)
+    // rtPrintf("%f\n", rec_volumetricRadiance.x);
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,
     //                       tmp.x, tmp.y, tmp.z);
   output_buffer[launch_index] = make_float4(final_color);

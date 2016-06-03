@@ -44,6 +44,8 @@ if(GLUT_FOUND AND OPENGL_FOUND)
     path_tracer.h
     random.h
     sphere.cu
+	model.h
+	model.cpp
     triangle_mesh.cu
     ABB.cu
     #VHit.cu
