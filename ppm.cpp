@@ -206,7 +206,7 @@ const unsigned int ProgressivePhotonScene::WIDTH = 768u;
 const unsigned int ProgressivePhotonScene::HEIGHT = 768u;
 const unsigned int ProgressivePhotonScene::MAX_PHOTON_COUNT = 5u;
 const float ProgressivePhotonScene::PPMRadius = 1.0f;
-const float ProgressivePhotonScene::m_sigma_a = 0.005f;
+const float ProgressivePhotonScene::m_sigma_a = 0.000f;
 const float ProgressivePhotonScene::m_sigma_s = 0.02f;
 
 bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
@@ -420,10 +420,10 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 
 
 
-		camera_data = InitialCameraData(make_float3(235.0f, -120.0f, -0.0f), // eye
+		camera_data = InitialCameraData(make_float3(345.0f, -180.0f, -0.0f), // eye
 										make_float3(-400.0f, 0.0f, 0.0f),      // lookat
 										make_float3(0.0f, 1.0f, 0.0f),     // up
-										25.0f);                              // vfov
+										45.0f);                              // vfov
 		bool useWindowLight = true;
 		if (!useWindowLight)
 		{
@@ -438,7 +438,7 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 		} else
 		{
 			createLights();
-			m_context["light"]->setUserData(sizeof(PPMLight), m_multiLights);
+			m_context["light"]->setUserData(sizeof(PPMLight), m_multiLights );
 			//TODO set to m_numLights * sizeof(PPMLight)
 		}
 		m_context["rtpass_default_radius2"]->setFloat(10.0f);// 0.25f);
@@ -1140,9 +1140,9 @@ void ProgressivePhotonScene::createLightParameters(const std::vector<float3> squ
 	//                   |
 	//					 V
 	//					 v2
-	float3 v1Origin = squareCor[1] - squareCor[0];
-	float3 v2Origin = squareCor[2] + dist - squareCor[0];
-	float3 anchorOrigin = squareCor[0];
+	float3 v1Origin = squareCor[1] - squareCor[0] + dist;
+	float3 v2Origin = squareCor[2] - squareCor[0] + dist;
+	float3 anchorOrigin = squareCor[0] + dist;
 	//transform parameters
 	float3 translate = optix::make_float3(0, 50.4, 0);
 	float3 scale = optix::make_float3(20, 20, 20);
@@ -1286,7 +1286,7 @@ int main(int argc, char** argv)
 		if (cornell_box) scene.setSceneCornellBox();
 		GLUTDisplay::setProgressiveDrawingTimeout(timeout);
 		GLUTDisplay::setUseSRGB(true);
-		GLUTDisplay::run("ProgressivePhotonScene", &scene, GLUTDisplay::CDAnimated);
+		GLUTDisplay::run("ProgressivePhotonScene", &scene, GLUTDisplay::CDProgressive);
 	}
 	catch (Exception& e){
 		sutilReportError(e.getErrorString().c_str());

@@ -174,7 +174,7 @@ RT_PROGRAM void closestHitPhoton()
             volumetricPhotons[volumetricPhotonIdx].position = scatterPosition;
             atomicAdd(&volumetricPhotons[volumetricPhotonIdx].numDeposits, 1);
             //rtPrintf("energy: %f, storeID: %d\n",photonPrd.energy.x, volumetricPhotonIdx);
-			rtPrintf("%f %f %f : %f\n", scatterPosition.x, scatterPosition.y, scatterPosition.z, scatterLocationT);
+			//rtPrintf("%f %f %f : %f\n", scatterPosition.x, scatterPosition.y, scatterPosition.z, scatterLocationT);
         }
 
         // Check if we have gone above max number of photons or stack depth

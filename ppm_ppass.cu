@@ -53,12 +53,14 @@ static __device__ __inline__ float2 rnd_from_uint2( uint2& prev )
 static __device__ __inline__ void generateAreaLightPhoton( const PPMLight& light, const float2& d_sample, float3& o, float3& d)
 {
   // Choose a random position on light
-  o = light.anchor + 0.5f * ( light.v1 + light.v2);
-  
+  o = light.anchor + d_sample.x * light.v1 +  d_sample.y * light.v2;
+  d = normalize(light.direction);
   // Choose a random direction from light
-  float3 U, V, W;
-  createONB( light.direction, U, V, W);
-  sampleUnitHemisphere( d_sample, U, V, W, d );
+  //float3 U, V, W;
+  //createONB( light.direction, U, V, W);
+  //sampleUnitHemisphere( d_sample, U, V, W, d );
+  //rtPrintf("o: %f %f %f\n", o.x, o.y, o.z);
+  //rtPrintf("d: %f %f %f\n", d.x, d.y, d.z);
 }
 
 static __device__ __inline__ void generateSpotLightPhoton( const PPMLight& light, const float2& d_sample, float3& o, float3& d)
@@ -100,7 +102,7 @@ RT_PROGRAM void ppass_camera()
   float2 direction_sample = make_float2(
       ( static_cast<float>( launch_index.x ) + rnd( seed.x ) ) / static_cast<float>( size.x ),
       ( static_cast<float>( launch_index.y ) + rnd( seed.y ) ) / static_cast<float>( size.y ) );
-  direction_sample = make_float2(0.0f);
+  //direction_sample = make_float2(0.0f);
   float3 ray_origin, ray_direction;
   if( light.is_area_light ) {
     generateAreaLightPhoton( light, direction_sample, ray_origin, ray_direction );
