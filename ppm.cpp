@@ -1180,10 +1180,10 @@ void ProgressivePhotonScene::createLights() {
 	//side windows
 
 	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-1.6, 10, -2.8));
-	tmpSquareCors.push_back(optix::make_float3(-0.5, 10, -2.8));
-	tmpSquareCors.push_back(optix::make_float3(-1.6, 10, -0.05));
-	protrudingDist.push_back(optix::make_float3(0.0, 1.0, 0.0));
+	tmpSquareCors.push_back(optix::make_float3(-7.13, -13.51, -8.20));
+	tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -8.20));
+	tmpSquareCors.push_back(optix::make_float3(-7.13, -10.76, -8.20));
+	protrudingDist.push_back(optix::make_float3(0.0, 0.0, 0.01));
 	squareCors.push_back(tmpSquareCors);
 
 	//the front wall's parameters!
@@ -1229,7 +1229,7 @@ void ProgressivePhotonScene::createLights() {
 	squareCors.push_back(tmpSquareCors);
 
 	for (int i = 0; i < m_numLights; ++i) {
-		m_multiLights[i].power = 2*make_float3(0.5e5f, 0.4e5f, 0.2e5f);
+		m_multiLights[i].power = 2*make_float3(0.5e4f, 0.4e4f, 0.2e4f);
 		m_multiLights[i].is_area_light = 1;
 		createLightParameters(squareCors[i], protrudingDist[i], m_multiLights[i].v1, m_multiLights[i].v2, m_multiLights[i].anchor);
 		m_multiLights[i].direction = normalize(cross(m_multiLights[i].v1, m_multiLights[i].v2));
