@@ -1168,7 +1168,7 @@ void ProgressivePhotonScene::createLightParameters(const std::vector<float3> squ
 }
 
 void ProgressivePhotonScene::createLights() {
-	m_numLights = 5;
+	m_numLights = 6;
 	m_multiLights = new PPMLight[m_numLights];
 
 	std::vector<std::vector<float3> > squareCors;
@@ -1176,14 +1176,24 @@ void ProgressivePhotonScene::createLights() {
 	std::vector<float3> tmpSquareCors;
 	protrudingDist.clear();
 
+
+	//side windows
+
+	tmpSquareCors.clear();
+	tmpSquareCors.push_back(optix::make_float3(-1.6, 10, -2.8));
+	tmpSquareCors.push_back(optix::make_float3(-0.5, 10, -2.8));
+	tmpSquareCors.push_back(optix::make_float3(-1.6, 10, -0.05));
+	protrudingDist.push_back(optix::make_float3(0.0, 1.0, 0.0));
+	squareCors.push_back(tmpSquareCors);
+
 	//the front wall's parameters!
 	//the round window
 
 	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -1.2, -1.5));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -1.2, 1.5));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -4.2, -1.5));
-	protrudingDist.push_back(optix::make_float3(-3.0, 0.0, 0.0));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -2.2, -4.8));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, 2.2, -4.8));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -2.2, -0.3));
+	protrudingDist.push_back(optix::make_float3(3.0, 0.0, 0.0));
 	squareCors.push_back(tmpSquareCors);
 
 	//the left window
