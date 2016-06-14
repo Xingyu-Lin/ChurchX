@@ -1,4 +1,3 @@
-staklo
 sprljci
 kamen_zid
 stupovi
@@ -13,4 +12,3 @@ rozeta
 staklo_zeleno
 staklo_plavo
 staklo_zuto
-sphere

@@ -15,138 +15,54 @@ rtDeclareVariable(float3, geometricNormal, attribute geometricNormal, );
 rtDeclareVariable(float3, shadingNormal, attribute shadingNormal, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
+
+static __device__ float3 boxnormal(float t)
+{
+	float3 t0 = (cuboidMin - ray.origin)/ray.direction;
+	float3 t1 = (cuboidMax - ray.origin)/ray.direction;
+	float3 neg = make_float3(t==t0.x?1:0, t==t0.y?1:0, t==t0.z?1:0);
+	float3 pos = make_float3(t==t1.x?1:0, t==t1.y?1:0, t==t1.z?1:0);
+	return pos-neg;
+}
+
 RT_PROGRAM void intersect(int primIdx)
 {
-	// X
-	int intersectionAxisNear = 0; //X=0, Y=1, Z=2
-	int intersectionAxisFar = 0; //X=0, Y=1, Z=2
-
-	float divx = 1 / ray.direction.x;
-	float tNear, tFar;
-	if (divx >= 0)
+	float3 origin = ray.origin;
+	if (cuboidMin.x+0.001< origin.x && origin.x< cuboidMax.x-0.001 &&
+		cuboidMin.y+0.001< origin.y && origin.y< cuboidMax.y-0.001 &&
+		cuboidMin.z+0.001< origin.z && origin.z< cuboidMax.z-0.001 &&
+	 (ray.ray_type == ppass_and_gather_ray_type || ray.ray_type == rtpass_ray_type)
+	)
 	{
-		tNear = (cuboidMin.x - ray.origin.x) * divx;
-		tFar = (cuboidMax.x - ray.origin.x) * divx;
-	}
-	else
-	{
-		tNear = (cuboidMax.x - ray.origin.x) * divx;
-		tFar = (cuboidMin.x - ray.origin.x) * divx;
-	}
-
-	if (tFar < tNear)
-	{
+		if (rtPotentialIntersection(0.11f))
+		{
+			geometricNormal = -ray.direction;
+			shadingNormal = geometricNormal;
+			rtReportIntersection(0);
+		}
 		return;
 	}
 
-	// Y
+	float3 t0 = (cuboidMin - ray.origin)/ray.direction;
+	float3 t1 = (cuboidMax - ray.origin)/ray.direction;
+	float3 near = fminf(t0, t1);
+	float3 far = fmaxf(t0, t1);
+	float tmin = fmaxf( near );
+	float tmax = fminf( far );
 
-	float divy = 1 / ray.direction.y;
-	float tyNear, tyFar;
-	if (divy >= 0)
-	{
-		tyNear = (cuboidMin.y - ray.origin.y) * divy;
-		tyFar = (cuboidMax.y - ray.origin.y) * divy;
-	}
-	else {
-		tyNear = (cuboidMax.y - ray.origin.y) * divy;
-		tyFar = (cuboidMin.y - ray.origin.y) * divy;
-	}
-
-	if (tyNear > tNear)
-	{
-		tNear = tyNear;
-		intersectionAxisNear = 1;
-	}
-
-	if (tyFar < tFar)
-	{
-		tFar = tyFar;
-		intersectionAxisFar = 1;
-	}
-
-	if (tFar < tNear)
-	{
-		return;
-	}
-
-	// Z
-
-	float divz = 1 / ray.direction.z;
-	float tzNear, tzFar;
-	if (divz >= 0)
-	{
-		tzNear = (cuboidMin.z - ray.origin.z) * divz;
-		tzFar = (cuboidMax.z - ray.origin.z) * divz;
-	}
-	else {
-		tzNear = (cuboidMax.z - ray.origin.z) * divz;
-		tzFar = (cuboidMin.z - ray.origin.z) * divz;
-	}
-
-
-	if (tzNear > tNear)
-	{
-		tNear = tzNear;
-		intersectionAxisNear = 2;
-	}
-
-	if (tzFar < tFar)
-	{
-		tFar = tzFar;
-		intersectionAxisFar = 2;
-	}
-
-	if (tFar < tNear)
-	{
-		return;
-	}
-
-	float t = tNear;
-	int intersectionAxis = intersectionAxisNear;
-
-	// If we are inside the cuboid, then we intersect at tFar. Furthermore, the normal
-	// of faces will point the same way as the ray direction's component on the intersection axis.
-	// If we are outside when we hit, then the normal points in the opposite direction as the ray direction's component
-	// in the intersection axis.
-
-	float normalVsRayDirection = -1;
-	// Take special action if we are inside the volume
-	if (tNear < 0.01f && tFar > 0.0f)
-	{
-		if (ray.ray_type == ppass_and_gather_ray_type)
-		{
-			//
-			intersectionAxis = intersectionAxisFar;
-			t = 0.000115; // must be larger than 0.0001 for now
+	if(tmin <= tmax) {
+		bool check_second = true;
+		if( rtPotentialIntersection( tmin ) ) {
+			shadingNormal = geometricNormal = boxnormal( tmin );
+			if(rtReportIntersection(0))
+				check_second = false;
 		}
-		else
-		{
-			intersectionAxis = intersectionAxisFar;
-			t = tFar;
-			normalVsRayDirection = 1;
+		if(check_second) {
+			if( rtPotentialIntersection( tmax ) ) {
+				shadingNormal = geometricNormal = boxnormal( tmax );
+				rtReportIntersection(0);
+			}
 		}
-	}
-
-	if (rtPotentialIntersection(t))
-	{
-		float3 hitpoint = ray.origin + t*ray.direction;
-
-		if (intersectionAxis == 0)
-		{
-			geometricNormal = make_float3(ray.direction.x >= 0 ? normalVsRayDirection : -normalVsRayDirection, 0, 0);
-		}
-		else if (intersectionAxis == 1)
-		{
-			geometricNormal = make_float3(0, ray.direction.y >= 0 ? normalVsRayDirection : -normalVsRayDirection, 0);
-		}
-		else
-		{
-			geometricNormal = make_float3(0, 0, ray.direction.z >= 0 ? normalVsRayDirection : -normalVsRayDirection);
-		}
-
-		shadingNormal = geometricNormal;
-		rtReportIntersection(0);
 	}
 }
 

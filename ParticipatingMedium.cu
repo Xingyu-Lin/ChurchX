@@ -8,6 +8,7 @@
 #include <optixu/optixu_math_namespace.h>
 #include "helpers.h"
 #include "random.h"
+#include "path_tracer.h"
 #include "ppm.h"
 
 using namespace optix;
@@ -34,6 +35,7 @@ rtBuffer<Photon, 1> volumetricPhotons;
 
 RT_PROGRAM void closestHitRadiance()
 {
+    //rtPrintf("Hello2\n");
     const float sigma_t = sigma_a + sigma_s;
     float3 worldShadingNormal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shadingNormal));
     float3 hitPoint = ray.origin + tHit*ray.direction;
@@ -50,19 +52,18 @@ RT_PROGRAM void closestHitRadiance()
         // Send ray through the medium
         Ray newRay(hitPoint, ray.direction, radiance_in_participating_medium, 0.01);
         rtTrace(top_object, newRay, hitPrd);
-
         float distance = hitPrd.lastTHit;
         float transmittance = exp(-distance*sigma_t);
-
         VolumetricRadiancePRD volRadiancePrd;
         volRadiancePrd.radiance = make_float3(0);
         volRadiancePrd.numHits = 0;
         volRadiancePrd.sigma_t = sigma_t;
         volRadiancePrd.sigma_s = sigma_s;
 
+        float3 tmpdirection = ray.direction;
         // Get volumetric radiance
-
-        Ray ray(hitPoint, ray.direction, volumetric_radiance, 0.0000001, distance);
+        Ray ray(hitPoint, tmpdirection, volumetric_radiance, 0.0000001, distance);
+        //rtPrintf("Volumetric radiance start at: %f %f %f, direction %f %f %f, distance: %f\n", hitPoint.x, hitPoint.y, hitPoint.z, ray.direction.x, ray.direction.y, ray.direction.z, distance);
         rtTrace(volumetricPhotonsRoot, ray, volRadiancePrd);
 
         // Multiply existing volumetric transmittance with current transmittance, and add gathered volumetric radiance
@@ -72,6 +73,8 @@ RT_PROGRAM void closestHitRadiance()
         hitPrd.volumetricRadiance += attenSaved*volRadiancePrd.radiance;
         hitPrd.attenuation *= transmittance;
 
+        //rtPrintf("%f\n", volRadiancePrd.radiance.x);
+        //if (volRadiancePrd.numHits>0) rtPrintf("%f %f %f %d \n", distance , transmittance, hitPrd.volumetricRadiance.x, volRadiancePrd.numHits);
     }
     else
     {
@@ -83,7 +86,6 @@ RT_PROGRAM void closestHitRadiance()
         rtTrace(top_object, newRay, hitPrd);
     }
     hitPrd.lastTHit = tHitStack;
-
 }
 
 static __device__ __inline__ float rnd_float_from_uint2(uint2& prev)
@@ -96,12 +98,28 @@ static __device__ __inline__ float2 rnd_from_uint2(uint2& prev)
     return make_float2(rnd(prev.x), rnd(prev.y));
 }
 
+static __device__ __inline__ optix::float3 sampleScatterSphere(const optix::float3 rayDirection, const optix::float2& sample)
+{
+	float x = sample.x;
+	float y = sample.y;
+	//x /= 3.0;
+	//y /= 3.0;
+	float z = sqrtf(fmaxf(0.0f, 1.0f - x*x - y*y));
+
+	// Now transform into light space
+	float3 U, V, W;
+	createONB(rayDirection, U, V, W);
+	float3 d = x*U + y*V + z*W;
+	return d;
+}
+
 /*
 //
 */
 
 RT_PROGRAM void closestHitPhoton()
 {
+    //rtPrintf("Hello1\n");
     const float sigma_t = sigma_a + sigma_s;
 
     photonPrd.ray_depth++;
@@ -124,6 +142,7 @@ RT_PROGRAM void closestHitPhoton()
 
     float scatterLocationT = - logf(1-sample)/sigma_t;
     float3 scatterPosition = hitPoint + scatterLocationT*ray.direction;
+
     int depth = photonPrd.ray_depth;
 
     // We need to see if anything obstructs the ray in the interval from the hitpoint to the scatter location.
@@ -150,10 +169,12 @@ RT_PROGRAM void closestHitPhoton()
 
         //if(photonPrd.numStoredPhotons < maxPhotonDepositsPerEmitted)
         {
-            int volumetricPhotonIdx = photonPrd.pm_index % 200000; //TODO:
+            int volumetricPhotonIdx = photonPrd.pm_index % 2000000;
             volumetricPhotons[volumetricPhotonIdx].power = photonPrd.energy;
             volumetricPhotons[volumetricPhotonIdx].position = scatterPosition;
             atomicAdd(&volumetricPhotons[volumetricPhotonIdx].numDeposits, 1);
+            //rtPrintf("energy: %f, storeID: %d\n",photonPrd.energy.x, volumetricPhotonIdx);
+			rtPrintf("%f %f %f : %f\n", scatterPosition.x, scatterPosition.y, scatterPosition.z, scatterLocationT);
         }
 
         // Check if we have gone above max number of photons or stack depth
@@ -164,11 +185,10 @@ RT_PROGRAM void closestHitPhoton()
 
         // Create the scattered ray with a direction given by importance sampling of the phase function
 
-        float3 scatterDirection = sampleUnitSphere(rnd_from_uint2(photonPrd.sample));
+		float3 scatterDirection = sampleScatterSphere(ray.direction, rnd_from_uint2(photonPrd.sample));
 
         //OPTIX_DEBUG_PRINT(photonPrd.depth-1, "Not interrupted. Store, scatter P(%.2f %.2f %.2f) D(%.2f %.2f %.2f)\n", scatterPosition.x, scatterPosition.y, scatterPosition.z,
           //                scatterDirection.x, scatterDirection.y, scatterDirection.z);
-
         Ray scatteredRay(scatterPosition, scatterDirection, ppass_and_gather_ray_type, 0.001, RT_DEFAULT_MAX);
         rtTrace(top_object, scatteredRay, photonPrd);
 

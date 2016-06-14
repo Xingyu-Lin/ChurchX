@@ -23,12 +23,12 @@ rtDeclareVariable(float, volumetricRadius, ,);
 
 RT_PROGRAM void anyHitRadiance()
 {
-    float t = dot(photonPosition-ray.origin, ray.direction);
+    float t = dot(photonPosition-ray.origin, ray.direction)/100;
 
     if(t < ray.tmax && t > ray.tmin)
     {
         volRadiancePrd.radiance += (1/(M_PIf*volumetricRadius*volumetricRadius)) * photonPower * exp(-volRadiancePrd.sigma_t*t) * (1.f/(4.f*M_PIf));
-        //rtPrintf("%f %f %f\n", volumetricRadius, photonPower.x, (1/(M_PIf*volumetricRadius*volumetricRadius)) * photonPower.x * exp(-volRadiancePrd.sigma_t*t) * (1.f/(4.f*M_PIf)));
+        //rtPrintf("%f %f %f %f\n", t, volumetricRadius, photonPower.x, (1/(M_PIf*volumetricRadius*volumetricRadius)) * photonPower.x * exp(-volRadiancePrd.sigma_t*t) * (1.f/(4.f*M_PIf)));
         volRadiancePrd.numHits++;
     }
     rtIgnoreIntersection();

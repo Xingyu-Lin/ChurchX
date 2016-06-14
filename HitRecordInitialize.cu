@@ -15,7 +15,7 @@ RT_PROGRAM void kernel()
     HitRecord rec;
     rec.normal=rec.position=make_float3(0.0f);
 
-    rec.flags = PPM_HIT;
+    rec.flags = PPM_NULL;
     rec.radius2 = rtpass_default_radius2;
     rec.photon_count = 0;
     rec.accum_atten = 0.0f;

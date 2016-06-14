@@ -48,8 +48,6 @@ if(GLUT_FOUND AND OPENGL_FOUND)
 	model.cpp
     triangle_mesh.cu
     ABB.cu
-    #VHit.cu
-    #VInit.cu
     ParticipatingMedium.cu
     HitRecordInitialize.cu
     )

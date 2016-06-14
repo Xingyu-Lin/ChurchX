@@ -67,7 +67,7 @@ RT_PROGRAM void rtpass_camera()
   prd.ray_depth   = 0u;
   prd.volumetricRadiance = make_float3(0.0f);
   rtTrace( top_object, ray, prd );
-  rtpass_output_buffer[launch_index].volumetricRadiance = prd.volumetricRadiance;
+  rtpass_output_buffer[launch_index].volumetricRadiance += prd.volumetricRadiance;
 
 }
 
@@ -108,7 +108,7 @@ RT_PROGRAM void rtpass_closest_hit()
   float3 world_geometric_normal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 ffnormal     = faceforward( world_shading_normal, -direction, world_geometric_normal );
   float3 hit_point    = origin + t_hit*direction;
-
+  double tHitStack = t_hit + 0.1 - 0.1; // Important, prevents compiler optimization on variable
   if( fmaxf( Kd ) > 0.0f ) {
     // We hit a diffuse surface; record hit and return
     HitRecord rec = rtpass_output_buffer[ launch_index ];;
@@ -129,7 +129,7 @@ RT_PROGRAM void rtpass_closest_hit()
         rec.attenuated_Kd = Kd * hit_prd.attenuation;
     }
     rec.flags = PPM_HIT;
-	rec.attenuated_Kd += make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
+	rec.attenuated_Kd *= make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
     //rtPrintf("%f %f %f\n", rec.attenuated_Kd.x, rec.attenuated_Kd.y, rec.attenuated_Kd.z);
     rtpass_output_buffer[launch_index] = rec;
   } else {
@@ -140,6 +140,7 @@ RT_PROGRAM void rtpass_closest_hit()
     optix::Ray refl_ray( hit_point, R, rtpass_ray_type, scene_epsilon );
     rtTrace( top_object, refl_ray, hit_prd );
   }
+  hit_prd.lastTHit = tHitStack;
 }
 
 //

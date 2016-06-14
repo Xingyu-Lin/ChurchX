@@ -220,12 +220,18 @@ RT_PROGRAM void gather()
   //rec_atten_Kd += make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
   rtpass_output_buffer[launch_index] = rec;
-  float3 final_color = direct_flux + indirect_flux + ambient_light*rec_atten_Kd + rec_volumetricRadiance/total_emitted;
+  //float3 final_color = rec_volumetricRadiance / total_emitted;
+  float3 final_color = indirect_flux + direct_flux + rec_volumetricRadiance / total_emitted + ambient_light*rec_atten_Kd;
+  //float3 final_color = indirect_flux ;
+
+  //if (fmaxf(rec_volumetricRadiance / total_emitted)>0.0f) final_color = make_float3(0.7f,0.0f,0.0f);
+  //if (fmaxf(rec_volumetricRadiance)>0.0f) final_color = make_float3(0.7f,0.0f,0.0f);
+
   float3 tmp =  rec_volumetricRadiance/total_emitted;
-  //if (rec_volumetricRadiance.x>0)
-    // rtPrintf("%f\n", rec_volumetricRadiance.x);
-  //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,
-    //                       tmp.x, tmp.y, tmp.z);
+  //if (tmp.x>0)
+  //rtPrintf("%f %f\n", tmp.x, total_emitted);
+  //if (tmp.x>0)
+  //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,tmp.x, tmp.y, tmp.z);
   output_buffer[launch_index] = make_float4(final_color);
   if(use_debug_buffer == 1)
     debug_buffer[launch_index] = make_float4( loop_iter, new_R2, new_N, M );
@@ -247,5 +253,6 @@ RT_PROGRAM void gather_exception()
 {
   output_buffer[launch_index] = make_float4(1.0f, 1.0f, 0.0f, 0.0f);
 }
+
 
 

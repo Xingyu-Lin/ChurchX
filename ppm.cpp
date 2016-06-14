@@ -47,7 +47,7 @@
 
 using namespace optix;
 
-#define NUM_VOLUMETRIC_PHOTONS 200000
+#define NUM_VOLUMETRIC_PHOTONS 2000000
 
 // Finds the smallest power of 2 greater or equal to x.
 inline unsigned int pow2roundup(unsigned int x)
@@ -86,6 +86,11 @@ inline RT_HOSTDEVICE int max_component(float3 a)
 	}
 }
 
+static void print(float3 outVec)
+{
+	printf("(%f, %f, %f)\n", outVec.x, outVec.y, outVec.z);
+}
+
 float3 sphericalToCartesian(float theta, float phi)
 {
 	float cos_theta = cosf(theta);
@@ -115,15 +120,15 @@ class ProgressivePhotonScene : public SampleScene
 {
 public:
 	ProgressivePhotonScene(unsigned int photon_launch_dim) : SampleScene()
-		, m_frame_number(0)
-		, m_display_debug_buffer(false)
-		, m_print_timings(false)
-		, m_cornell_box(false)
-		, m_light_phi(-2.20f)
-		, m_light_theta(1.15f)
-		, m_photon_launch_width(photon_launch_dim)
-		, m_photon_launch_height(photon_launch_dim)
-		, m_split_choice(LongestDim)
+			, m_frame_number(0)
+			, m_display_debug_buffer(false)
+			, m_print_timings(false)
+			, m_cornell_box(false)
+			, m_light_phi(-2.20f)
+			, m_light_theta(1.15f)
+			, m_photon_launch_width(photon_launch_dim)
+			, m_photon_launch_height(photon_launch_dim)
+			, m_split_choice(LongestDim)
 	{
 		m_num_photons = (m_photon_launch_width * m_photon_launch_height * ProgressivePhotonScene::MAX_PHOTON_COUNT);
 	}
@@ -133,6 +138,9 @@ public:
 	bool   keyPressed(unsigned char key, int x, int y);
 	void   trace(const RayGenCameraData& camera_data);
 	void   doResize(unsigned int width, unsigned int height);
+	void createLightParameters(const std::vector<float3> squareCor, float3 dist, float3& v1, float3& v2, float3& anchor);
+	void createLights();
+
 	Buffer getOutputBuffer();
 
 	void setSceneCornellBox() { m_cornell_box = true; }
@@ -145,9 +153,9 @@ private:
 	void loadObjGeometry();
 	void createCornellBoxGeometry();
 	GeometryInstance createParallelogram(const float3& anchor,
-		const float3& offset1,
-		const float3& offset2,
-		const float3& color);
+										 const float3& offset1,
+										 const float3& offset2,
+										 const float3& color);
 
 	enum ProgramEnum {
 		rtpass,
@@ -183,7 +191,8 @@ private:
 	unsigned int  m_num_photons;
 	SplitChoice   m_split_choice;
 	PPMLight      m_light;
-
+	PPMLight*	  m_multiLights;
+	int			  m_numLights;
 	const static unsigned int WIDTH;
 	const static unsigned int HEIGHT;
 	const static unsigned int MAX_PHOTON_COUNT;
@@ -195,10 +204,10 @@ private:
 
 const unsigned int ProgressivePhotonScene::WIDTH = 768u;
 const unsigned int ProgressivePhotonScene::HEIGHT = 768u;
-const unsigned int ProgressivePhotonScene::MAX_PHOTON_COUNT = 2u;
-const float ProgressivePhotonScene::PPMRadius = 0.4f;
-const float ProgressivePhotonScene::m_sigma_a = 0.1f;
-const float ProgressivePhotonScene::m_sigma_s = 0.2f;
+const unsigned int ProgressivePhotonScene::MAX_PHOTON_COUNT = 5u;
+const float ProgressivePhotonScene::PPMRadius = 1.0f;
+const float ProgressivePhotonScene::m_sigma_a = 0.005f;
+const float ProgressivePhotonScene::m_sigma_s = 0.02f;
 
 bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
 {
@@ -206,31 +215,32 @@ bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
 	bool light_changed = false;;
 	switch (key)
 	{
-	case 'l':
-		m_light_phi += step_size;
-		if (m_light_phi >  M_PIf * 2.0f) m_light_phi -= M_PIf * 2.0f;
-		light_changed = true;
-		break;
-	case 'j':
-		m_light_phi -= step_size;
-		if (m_light_phi <  0.0f) m_light_phi += M_PIf * 2.0f;
-		light_changed = true;
-		break;
-	case 'k':
-		std::cerr << "new theta: " << m_light_theta + step_size << " max: " << M_PIf / 2.0f << std::endl;
-		m_light_theta = fminf(m_light_theta + step_size, M_PIf / 2.0f);
-		light_changed = true;
-		break;
-	case 'i':
-		std::cerr << "new theta: " << m_light_theta - step_size << " min: 0.0f " << std::endl;
-		m_light_theta = fmaxf(m_light_theta - step_size, 0.0f);
-		light_changed = true;
-		break;
+		case 'l':
+			m_light_phi += step_size;
+			if (m_light_phi >  M_PIf * 2.0f) m_light_phi -= M_PIf * 2.0f;
+			light_changed = true;
+			break;
+		case 'j':
+			m_light_phi -= step_size;
+			if (m_light_phi <  0.0f) m_light_phi += M_PIf * 2.0f;
+			light_changed = true;
+			break;
+		case 'k':
+			std::cerr << "new theta: " << m_light_theta + step_size << " max: " << M_PIf / 2.0f << std::endl;
+			m_light_theta = fminf(m_light_theta + step_size, M_PIf / 2.0f);
+			light_changed = true;
+			break;
+		case 'i':
+			std::cerr << "new theta: " << m_light_theta - step_size << " min: 0.0f " << std::endl;
+			m_light_theta = fmaxf(m_light_theta - step_size, 0.0f);
+			light_changed = true;
+			break;
 	}
 
 	if (light_changed && !m_cornell_box) {
 		std::cerr << " theta: " << m_light_theta << "  phi: " << m_light_phi << std::endl;
-		m_light.position = 500.0f * sphericalToCartesian(m_light_theta, m_light_phi);
+		m_light.position = 1000.0 * sphericalToCartesian(m_light_theta, m_light_phi);
+		printf("%f, %f, %f", m_light.position.x, m_light.position.y, m_light.position.z);
 		m_light.direction = normalize(make_float3(0.0f, 0.0f, 0.0f) - m_light.position);
 		m_context["light"]->setUserData(sizeof(PPMLight), &m_light);
 		signalCameraChanged();
@@ -263,7 +273,7 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 
 	m_context->setRayTypeCount(num_ray_type);
 	m_context->setEntryPointCount(numPrograms);
-	m_context->setStackSize(960);
+	m_context->setStackSize(4096);
 
 	m_context["max_depth"]->setUint(3);
 	m_context["max_photon_count"]->setUint(MAX_PHOTON_COUNT);
@@ -307,158 +317,162 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 		// RTPass exception/miss programs
 		Program exception_program = m_context->createProgramFromPTXFile(ptx_path, "rtpass_exception");
 		m_context->setExceptionProgram(rtpass, exception_program);
-		m_context["rtpass_bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
+		m_context["rtpass_bad_color"]->setFloat(1.0f, 1.0f, 1.0f);
 		m_context->setMissProgram(rtpass, m_context->createProgramFromPTXFile(ptx_path, "rtpass_miss"));
 		m_context["rtpass_bg_color"]->setFloat(make_float3(0.34f, 0.55f, 0.85f));
 	}
 
 	// clear hit record
-  {
-	  std::string ptx_path = ptxpath("progressivePhotonMap", "HitRecordInitialize.cu");
-	  Program program = m_context->createProgramFromPTXFile(ptx_path, "kernel");
-	  m_context->setRayGenerationProgram(clear_hitRecord, program);
-  }
-
-  // Set up camera
-  camera_data = InitialCameraData(make_float3(278.0f, 273.0f, -800.0f), // eye
-	  make_float3(278.0f, 273.0f, 0.0f),    // lookat
-	  make_float3(0.0f, 1.0f, 0.0f),       // up
-	  35.0f);                                // vfov
-
-  // Declare these so validation will pass
-  m_context["rtpass_eye"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
-  m_context["rtpass_U"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
-  m_context["rtpass_V"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
-  m_context["rtpass_W"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
-
-  // Photon pass
-  m_photons = m_context->createBuffer(RT_BUFFER_OUTPUT);
-  m_photons->setFormat(RT_FORMAT_USER);
-  m_photons->setElementSize(sizeof(PhotonRecord));
-  m_photons->setSize(m_num_photons);
-  m_context["ppass_output_buffer"]->set(m_photons);
-
-
-  {
-	  std::string ptx_path = ptxpath("progressivePhotonMap", "ppm_ppass.cu");
-	  Program ray_gen_program = m_context->createProgramFromPTXFile(ptx_path, "ppass_camera");
-	  m_context->setRayGenerationProgram(ppass, ray_gen_program);
-
-	  Buffer photon_rnd_seeds = m_context->createBuffer(RT_BUFFER_INPUT,
-		  RT_FORMAT_UNSIGNED_INT2,
-		  m_photon_launch_width,
-		  m_photon_launch_height);
-	  uint2* seeds = reinterpret_cast<uint2*>(photon_rnd_seeds->map());
-	  for (unsigned int i = 0; i < m_photon_launch_width*m_photon_launch_height; ++i)
-		  seeds[i] = random2u();
-	  photon_rnd_seeds->unmap();
-	  m_context["photon_rnd_seeds"]->set(photon_rnd_seeds);
-
-  }
-
-  // Gather phase
-  {
-	  std::string ptx_path = ptxpath("progressivePhotonMap", "ppm_gather.cu");
-	  Program gather_program = m_context->createProgramFromPTXFile(ptx_path, "gather");
-	  m_context->setRayGenerationProgram(gather, gather_program);
-	  Program exception_program = m_context->createProgramFromPTXFile(ptx_path, "gather_exception");
-	  m_context->setExceptionProgram(gather, exception_program);
-
-	  m_photon_map_size = pow2roundup(m_num_photons) - 1;
-	  m_photon_map = m_context->createBuffer(RT_BUFFER_INPUT);
-	  m_photon_map->setFormat(RT_FORMAT_USER);
-	  m_photon_map->setElementSize(sizeof(PhotonRecord));
-	  m_photon_map->setSize(m_photon_map_size);
-	  m_context["photon_map"]->set(m_photon_map);
-  }
-
-  // Populate scene hierarchy
-  if (!m_cornell_box) {
-	  // Related to photonSphere
-	  {
-		  m_volumetricPhotonsBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
-		  m_volumetricPhotonsBuffer->setFormat(RT_FORMAT_USER);
-		  m_volumetricPhotonsBuffer->setElementSize(sizeof(Photon));
-		  m_volumetricPhotonsBuffer->setSize(200000);
-		  m_context["volumetricPhotons"]->setBuffer(m_volumetricPhotonsBuffer);
-
-		  optix::Geometry photonSpheres = m_context->createGeometry();
-		  photonSpheres->setPrimitiveCount(200000);
-		  std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonSphere.cu");
-		  photonSpheres->setIntersectionProgram(m_context->createProgramFromPTXFile(ptx_path, "intersect"));
-		  photonSpheres->setBoundingBoxProgram(m_context->createProgramFromPTXFile(ptx_path, "boundingBox"));
-
-		  optix::Material material = m_context->createMaterial();
-		  ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonSphereRadiance.cu");
-		  material->setAnyHitProgram(volumetric_radiance, m_context->createProgramFromPTXFile(ptx_path, "anyHitRadiance"));
-		  optix::GeometryInstance volumetricPhotonSpheres = m_context->createGeometryInstance(photonSpheres, &material, &material + 1);
-		  volumetricPhotonSpheres["photonsBuffer"]->setBuffer(m_volumetricPhotonsBuffer);
-
-		  m_volumetricPhotonsRoot = m_context->createGeometryGroup();
-		  m_volumetricPhotonsRoot->setChildCount(1);
-		  optix::Acceleration m_volumetricPhotonSpheresAcceleration = m_context->createAcceleration("MedianBvh", "Bvh");
-		  m_volumetricPhotonsRoot->setAcceleration(m_volumetricPhotonSpheresAcceleration);
-		  m_volumetricPhotonsRoot->setChild(0, volumetricPhotonSpheres);
-		  m_context["volumetricPhotonsRoot"]->set(m_volumetricPhotonsRoot);
-	  }
-
-	  // Clear Volumetric Photons Program
-
 	{
-		std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonInitialize.cu");
+		std::string ptx_path = ptxpath("progressivePhotonMap", "HitRecordInitialize.cu");
 		Program program = m_context->createProgramFromPTXFile(ptx_path, "kernel");
-		m_context->setRayGenerationProgram(clear_radiance_photon, program);
+		m_context->setRayGenerationProgram(clear_hitRecord, program);
 	}
 
-	optix::Aabb aabb;
-	if (loadObjConfig("./data/churchdata/config.txt") == -1) return;
-	loadObjGeometry();
+	// Declare these so validation will pass
+	m_context["rtpass_eye"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
+	m_context["rtpass_U"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
+	m_context["rtpass_V"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
+	m_context["rtpass_W"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
+
+	// Photon pass
+	m_photons = m_context->createBuffer(RT_BUFFER_OUTPUT);
+	m_photons->setFormat(RT_FORMAT_USER);
+	m_photons->setElementSize(sizeof(PhotonRecord));
+	m_photons->setSize(m_num_photons);
+	m_context["ppass_output_buffer"]->set(m_photons);
+
+
+	{
+		std::string ptx_path = ptxpath("progressivePhotonMap", "ppm_ppass.cu");
+		Program ray_gen_program = m_context->createProgramFromPTXFile(ptx_path, "ppass_camera");
+		m_context->setRayGenerationProgram(ppass, ray_gen_program);
+
+		Buffer photon_rnd_seeds = m_context->createBuffer(RT_BUFFER_INPUT,
+														  RT_FORMAT_UNSIGNED_INT2,
+														  m_photon_launch_width,
+														  m_photon_launch_height);
+		uint2* seeds = reinterpret_cast<uint2*>(photon_rnd_seeds->map());
+		for (unsigned int i = 0; i < m_photon_launch_width*m_photon_launch_height; ++i)
+			seeds[i] = random2u();
+		photon_rnd_seeds->unmap();
+		m_context["photon_rnd_seeds"]->set(photon_rnd_seeds);
+
+	}
+
+	// Gather phase
+	{
+		std::string ptx_path = ptxpath("progressivePhotonMap", "ppm_gather.cu");
+		Program gather_program = m_context->createProgramFromPTXFile(ptx_path, "gather");
+		m_context->setRayGenerationProgram(gather, gather_program);
+		Program exception_program = m_context->createProgramFromPTXFile(ptx_path, "gather_exception");
+		m_context->setExceptionProgram(gather, exception_program);
+
+		m_photon_map_size = pow2roundup(m_num_photons) - 1;
+		m_photon_map = m_context->createBuffer(RT_BUFFER_INPUT);
+		m_photon_map->setFormat(RT_FORMAT_USER);
+		m_photon_map->setElementSize(sizeof(PhotonRecord));
+		m_photon_map->setSize(m_photon_map_size);
+		m_context["photon_map"]->set(m_photon_map);
+	}
+
+	// Populate scene hierarchy
+	if (!m_cornell_box) {
+		// Related to photonSphere
+		{
+			m_volumetricPhotonsBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+			m_volumetricPhotonsBuffer->setFormat(RT_FORMAT_USER);
+			m_volumetricPhotonsBuffer->setElementSize(sizeof(Photon));
+			m_volumetricPhotonsBuffer->setSize(NUM_VOLUMETRIC_PHOTONS);
+			m_context["volumetricPhotons"]->setBuffer(m_volumetricPhotonsBuffer);
+
+			optix::Geometry photonSpheres = m_context->createGeometry();
+			photonSpheres->setPrimitiveCount(NUM_VOLUMETRIC_PHOTONS);
+			std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonSphere.cu");
+			photonSpheres->setIntersectionProgram(m_context->createProgramFromPTXFile(ptx_path, "intersect"));
+			photonSpheres->setBoundingBoxProgram(m_context->createProgramFromPTXFile(ptx_path, "boundingBox"));
+
+			optix::Material material = m_context->createMaterial();
+			ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonSphereRadiance.cu");
+			material->setAnyHitProgram(volumetric_radiance, m_context->createProgramFromPTXFile(ptx_path, "anyHitRadiance"));
+			optix::GeometryInstance volumetricPhotonSpheres = m_context->createGeometryInstance(photonSpheres, &material, &material + 1);
+			volumetricPhotonSpheres["photonsBuffer"]->setBuffer(m_volumetricPhotonsBuffer);
+
+			m_volumetricPhotonsRoot = m_context->createGeometryGroup();
+			m_volumetricPhotonsRoot->setChildCount(1);
+			optix::Acceleration m_volumetricPhotonSpheresAcceleration = m_context->createAcceleration("MedianBvh", "Bvh");
+			m_volumetricPhotonsRoot->setAcceleration(m_volumetricPhotonSpheresAcceleration);
+			m_volumetricPhotonsRoot->setChild(0, volumetricPhotonSpheres);
+			m_context["volumetricPhotonsRoot"]->set(m_volumetricPhotonsRoot);
+		}
+
+		// Clear Volumetric Photons Program
+
+		{
+			std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonInitialize.cu");
+			Program program = m_context->createProgramFromPTXFile(ptx_path, "kernel");
+			m_context->setRayGenerationProgram(clear_radiance_photon, program);
+		}
+
+		optix::Aabb aabb;
+		if (loadObjConfig("./data/churchdata/config.txt") == -1) return;
+		loadObjGeometry();
 
 
 
-	camera_data = InitialCameraData(make_float3(-235.0f, 220.0f, 0.0f), // eye
-		make_float3(0.0f, 0.0f, 0.0f),      // lookat
-		make_float3(0.0f, 1.0f, 0.0f),     // up
-		35.0f);                              // vfov
-	m_light.is_area_light = 0;
-	m_light.position = 1000.0f * sphericalToCartesian(m_light_theta, m_light_phi);
-	//light.position = make_float3( 600.0f, 500.0f, 700.0f );
-	m_light.direction = normalize(make_float3(0.0f, 0.0f, 0.0f) - m_light.position);
-	m_light.radius = 20.0f *0.01745329252f;
-	m_light.power = make_float3(5.9e4f, 5.9e4f, 5.9e4f);
-	m_context["light"]->setUserData(sizeof(PPMLight), &m_light);
-	m_context["rtpass_default_radius2"]->setFloat(0.25f);
-	m_context["ambient_light"]->setFloat(0.05f, 0.05f, 0.05f);
-	std::string full_path = std::string(sutilSamplesDir()) + "/tutorial/data/CedarCity.hdr";
-	const float3 default_color = make_float3(0.8f, 0.88f, 0.97f);
-	m_context["envmap"]->setTextureSampler(loadTexture(m_context, full_path, default_color));
-  }
-  else {
+		camera_data = InitialCameraData(make_float3(235.0f, -120.0f, -0.0f), // eye
+										make_float3(-400.0f, 0.0f, 0.0f),      // lookat
+										make_float3(0.0f, 1.0f, 0.0f),     // up
+										25.0f);                              // vfov
+		bool useWindowLight = true;
+		if (!useWindowLight)
+		{
+			m_light.is_area_light = 0;
+			m_light.position = 500.0f * sphericalToCartesian(m_light_theta, m_light_phi);
+			//printf("%f, %f, %f", m_light.position.x, m_light.position.y, m_light.position.z);
+			//m_light.position = make_float3(-400.0f, -160.0f, -345.0f);
+			m_light.direction = normalize(make_float3(0.0f, 0.0f, 0.0f) - m_light.position);
+			m_light.radius = 250.0f * 0.01745329252f;
+			m_light.power = make_float3(5.5e5f, 5.5e5f, 5.5e5f);
+			m_context["light"]->setUserData(sizeof(PPMLight), &m_light);
+		} else
+		{
+			createLights();
+			m_context["light"]->setUserData(sizeof(PPMLight), m_multiLights);
+			//TODO set to m_numLights * sizeof(PPMLight)
+		}
+		m_context["rtpass_default_radius2"]->setFloat(10.0f);// 0.25f);
+		m_context["ambient_light"]->setFloat(0.1f, 0.1f, 0.1f);
+		std::string full_path = std::string(sutilSamplesDir()) + "/tutorial/data/CedarCity.hdr";
+		const float3 default_color = make_float3(0.8f, 0.88f, 0.97f);
+		m_context["envmap"]->setTextureSampler(loadTexture(m_context, full_path, default_color));
+	}
+	else {
 
-	  createCornellBoxGeometry();
-	  // Set up camera
-	  camera_data = InitialCameraData(make_float3(278.0f, 273.0f, -850.0f), // eye
-		  make_float3(278.0f, 273.0f, 0.0f),    // lookat
-		  make_float3(0.0f, 1.0f, 0.0f),       // up
-		  35.0f);                                // vfov
+		createCornellBoxGeometry();
+		// Set up camera
+		camera_data = InitialCameraData(make_float3(278.0f, 273.0f, -850.0f), // eye
+										make_float3(278.0f, 273.0f, 0.0f),    // lookat
+										make_float3(0.0f, 1.0f, 0.0f),       // up
+										35.0f);                                // vfov
 
-	  m_light.is_area_light = 1;
-	  m_light.anchor = make_float3(343.0f, 548.6f, 227.0f);
-	  m_light.v1 = make_float3(0.0f, 0.0f, 105.0f);
-	  m_light.v2 = make_float3(-130.0f, 0.0f, 0.0f);
-	  m_light.direction = normalize(cross(m_light.v1, m_light.v2));
-	  m_light.power = make_float3(0.5e6f, 0.4e6f, 0.2e6f);
-	  m_context["light"]->setUserData(sizeof(PPMLight), &m_light);
-	  m_context["rtpass_default_radius2"]->setFloat(400.0f);
-	  m_context["ambient_light"]->setFloat(0.0f, 0.0f, 0.0f);
-	  const float3 default_color = make_float3(0.0f, 0.0f, 0.0f);
-	  m_context["envmap"]->setTextureSampler(loadTexture(m_context, "", default_color));
-  }
+		m_light.is_area_light = 1;
+		m_light.anchor = make_float3(343.0f, 548.6f, 227.0f);
+		m_light.v1 = make_float3(0.0f, 0.0f, 105.0f);
+		m_light.v2 = make_float3(-130.0f, 0.0f, 0.0f);
+		m_light.direction = normalize(cross(m_light.v1, m_light.v2));
+		m_light.power = make_float3(0.5e6f, 0.4e6f, 0.2e6f);
+		m_context["light"]->setUserData(sizeof(PPMLight), &m_light);
+		m_context["rtpass_default_radius2"]->setFloat(400.0f);
+		m_context["ambient_light"]->setFloat(0.0f, 0.0f, 0.0f);
+		const float3 default_color = make_float3(0.0f, 0.0f, 0.0f);
+		m_context["envmap"]->setTextureSampler(loadTexture(m_context, "", default_color));
+	}
 
 
-  // Prepare to run
-  m_context->validate();
-  m_context->compile();
+	// Prepare to run
+	m_context->validate();
+	m_context->compile();
 }
 
 Buffer ProgressivePhotonScene::getOutputBuffer()
@@ -483,7 +497,7 @@ bool photonCmpZ(PhotonRecord* r1, PhotonRecord* r2) { return r1->position.z < r2
 
 
 void buildKDTree(PhotonRecord** photons, int start, int end, int depth, PhotonRecord* kd_tree, int current_root,
-	SplitChoice split_choice, float3 bbmin, float3 bbmax)
+				 SplitChoice split_choice, float3 bbmin, float3 bbmax)
 {
 	// If we have zero photons, this is a NULL node
 	if (end - start == 0) {
@@ -502,38 +516,38 @@ void buildKDTree(PhotonRecord** photons, int start, int end, int depth, PhotonRe
 	// Choose axis to split on
 	int axis;
 	switch (split_choice) {
-	case RoundRobin:
-	{
-		axis = depth % 3;
-	}
-	break;
-	case HighestVariance:
-	{
-		float3 mean = make_float3(0.0f);
-		float3 diff2 = make_float3(0.0f);
-		for (int i = start; i < end; ++i) {
-			float3 x = photons[i]->position;
-			float3 delta = x - mean;
-			float3 n_inv = make_float3(1.0f / (static_cast<float>(i - start) + 1.0f));
-			mean = mean + delta * n_inv;
-			diff2 += delta*(x - mean);
+		case RoundRobin:
+		{
+			axis = depth % 3;
 		}
-		float3 n_inv = make_float3(1.0f / (static_cast<float>(end - start) - 1.0f));
-		float3 variance = diff2 * n_inv;
-		axis = max_component(variance);
-	}
-	break;
-	case LongestDim:
-	{
-		float3 diag = bbmax - bbmin;
-		axis = max_component(diag);
-	}
-	break;
-	default:
-		axis = -1;
-		std::cerr << "Unknown SplitChoice " << split_choice << " at " << __FILE__ << ":" << __LINE__ << "\n";
-		exit(2);
-		break;
+			break;
+		case HighestVariance:
+		{
+			float3 mean = make_float3(0.0f);
+			float3 diff2 = make_float3(0.0f);
+			for (int i = start; i < end; ++i) {
+				float3 x = photons[i]->position;
+				float3 delta = x - mean;
+				float3 n_inv = make_float3(1.0f / (static_cast<float>(i - start) + 1.0f));
+				mean = mean + delta * n_inv;
+				diff2 += delta*(x - mean);
+			}
+			float3 n_inv = make_float3(1.0f / (static_cast<float>(end - start) - 1.0f));
+			float3 variance = diff2 * n_inv;
+			axis = max_component(variance);
+		}
+			break;
+		case LongestDim:
+		{
+			float3 diag = bbmax - bbmin;
+			axis = max_component(diag);
+		}
+			break;
+		default:
+			axis = -1;
+			std::cerr << "Unknown SplitChoice " << split_choice << " at " << __FILE__ << ":" << __LINE__ << "\n";
+			exit(2);
+			break;
 	}
 
 	int median = (start + end) / 2;
@@ -555,18 +569,18 @@ void buildKDTree(PhotonRecord** photons, int start, int end, int depth, PhotonRe
 	}
 #else
 	switch (axis) {
-	case 0:
-		select<PhotonRecord*, 0>(start_addr, 0, end - start - 1, median - start);
-		photons[median]->axis = PPM_X;
-		break;
-	case 1:
-		select<PhotonRecord*, 1>(start_addr, 0, end - start - 1, median - start);
-		photons[median]->axis = PPM_Y;
-		break;
-	case 2:
-		select<PhotonRecord*, 2>(start_addr, 0, end - start - 1, median - start);
-		photons[median]->axis = PPM_Z;
-		break;
+		case 0:
+			select<PhotonRecord*, 0>(start_addr, 0, end - start - 1, median - start);
+			photons[median]->axis = PPM_X;
+			break;
+		case 1:
+			select<PhotonRecord*, 1>(start_addr, 0, end - start - 1, median - start);
+			photons[median]->axis = PPM_Y;
+			break;
+		case 2:
+			select<PhotonRecord*, 2>(start_addr, 0, end - start - 1, median - start);
+			photons[median]->axis = PPM_Z;
+			break;
 	}
 #endif
 	float3 rightMin = bbmin;
@@ -574,18 +588,18 @@ void buildKDTree(PhotonRecord** photons, int start, int end, int depth, PhotonRe
 	if (split_choice == LongestDim) {
 		float3 midPoint = (*photons[median]).position;
 		switch (axis) {
-		case 0:
-			rightMin.x = midPoint.x;
-			leftMax.x = midPoint.x;
-			break;
-		case 1:
-			rightMin.y = midPoint.y;
-			leftMax.y = midPoint.y;
-			break;
-		case 2:
-			rightMin.z = midPoint.z;
-			leftMax.z = midPoint.z;
-			break;
+			case 0:
+				rightMin.x = midPoint.x;
+				leftMax.x = midPoint.x;
+				break;
+			case 1:
+				rightMin.y = midPoint.y;
+				leftMax.y = midPoint.y;
+				break;
+			case 2:
+				rightMin.z = midPoint.z;
+				leftMax.z = midPoint.z;
+				break;
 		}
 	}
 
@@ -614,8 +628,8 @@ void ProgressivePhotonScene::createPhotonMap()
 	}
 	if (m_display_debug_buffer) {
 		std::cerr << " ** valid_photon/m_num_photons =  "
-			<< valid_photons << "/" << m_num_photons
-			<< " (" << valid_photons / static_cast<float>(m_num_photons) << ")\n";
+		<< valid_photons << "/" << m_num_photons
+		<< " (" << valid_photons / static_cast<float>(m_num_photons) << ")\n";
 	}
 
 	// Make sure we aren't at most 1 less than power of 2
@@ -659,8 +673,8 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 		m_context["rtpass_V"]->setFloat(camera_data.V);
 		m_context["rtpass_W"]->setFloat(camera_data.W);
 		m_context->launch(clear_hitRecord,
-			static_cast<unsigned int>(buffer_width),
-			static_cast<unsigned int>(buffer_height));
+						  static_cast<unsigned int>(buffer_width),
+						  static_cast<unsigned int>(buffer_height));
 		m_iteration_count = 1;
 		m_context["total_emitted"]->setFloat(0.0f);
 	}
@@ -673,7 +687,7 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 		m_volumetricPhotonsBuffer->unmap();
 	}
 	// Clear volume photons
-	m_context["volumetricRadius"]->setFloat(0.033 / 0.033*PPMRadius);
+	m_context["volumetricRadius"]->setFloat(PPMRadius);
 	{
 		//nvtx::ScopedRange r( "OptixEntryPoint::PPM_CLEAR_VOLUMETRIC_PHOTONS_PASS" );
 		m_context->launch(clear_radiance_photon, NUM_VOLUMETRIC_PHOTONS);
@@ -697,8 +711,8 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 	double t0, t1;
 	sutilCurrentTime(&t0);
 	m_context->launch(ppass,
-		static_cast<unsigned int>(m_photon_launch_width),
-		static_cast<unsigned int>(m_photon_launch_height));
+					  static_cast<unsigned int>(m_photon_launch_width),
+					  static_cast<unsigned int>(m_photon_launch_height));
 
 	m_volumetricPhotonsRoot->getAcceleration()->markDirty();
 	// By computing the total number of photons as an unsigned long long we avoid 32 bit
@@ -724,8 +738,8 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 		double t0, t1;
 		sutilCurrentTime(&t0);
 		m_context->launch(rtpass,
-			static_cast<unsigned int>(buffer_width),
-			static_cast<unsigned int>(buffer_height));
+						  static_cast<unsigned int>(buffer_width),
+						  static_cast<unsigned int>(buffer_height));
 		sutilCurrentTime(&t1);
 		if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
 	}
@@ -734,8 +748,8 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 	if (m_print_timings) std::cerr << "Starting gather pass   ... ";
 	sutilCurrentTime(&t0);
 	m_context->launch(gather,
-		static_cast<unsigned int>(buffer_width),
-		static_cast<unsigned int>(buffer_height));
+					  static_cast<unsigned int>(buffer_width),
+					  static_cast<unsigned int>(buffer_height));
 	sutilCurrentTime(&t1);
 	if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
 
@@ -777,22 +791,22 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 		sutilCurrentTime(&t1);
 		if (m_print_timings) std::cerr << "Stat collection time ...           " << t1 - t0 << std::endl;
 		std::cerr << "(min, max, average):"
-			<< " loop iterations: ( "
-			<< minv.x << ", "
-			<< maxv.x << ", "
-			<< avg.x << " )"
-			<< " radius: ( "
-			<< minv.y << ", "
-			<< maxv.y << ", "
-			<< avg.y << " )"
-			<< " N: ( "
-			<< minv.z << ", "
-			<< maxv.z << ", "
-			<< avg.z << " )"
-			<< " M: ( "
-			<< minv.w << ", "
-			<< maxv.w << ", "
-			<< avg.w << " )";
+		<< " loop iterations: ( "
+		<< minv.x << ", "
+		<< maxv.x << ", "
+		<< avg.x << " )"
+		<< " radius: ( "
+		<< minv.y << ", "
+		<< maxv.y << ", "
+		<< avg.y << " )"
+		<< " N: ( "
+		<< minv.z << ", "
+		<< maxv.z << ", "
+		<< avg.z << " )"
+		<< " M: ( "
+		<< minv.w << ", "
+		<< maxv.w << ", "
+		<< avg.w << " )";
 		std::cerr << ", total_iterations = " << m_iteration_count;
 		std::cerr << std::endl;
 	}
@@ -816,9 +830,9 @@ void ProgressivePhotonScene::doResize(unsigned int width, unsigned int height)
 }
 
 GeometryInstance ProgressivePhotonScene::createParallelogram(const float3& anchor,
-	const float3& offset1,
-	const float3& offset2,
-	const float3& color)
+															 const float3& offset1,
+															 const float3& offset2,
+															 const float3& color)
 {
 	Geometry parallelogram = m_context->createGeometry();
 	parallelogram->setPrimitiveCount(1u);
@@ -838,8 +852,8 @@ GeometryInstance ProgressivePhotonScene::createParallelogram(const float3& ancho
 	parallelogram["v2"]->setFloat(v2);
 
 	GeometryInstance gi = m_context->createGeometryInstance(parallelogram,
-		&m_material,
-		&m_material + 1);
+															&m_material,
+															&m_material + 1);
 	gi["Kd"]->setFloat(color);
 	gi["Ks"]->setFloat(0.0f, 0.0f, 0.0f);
 	gi["use_grid"]->setUint(0u);
@@ -870,26 +884,6 @@ int ProgressivePhotonScene::loadObjConfig(const std::string &filename)
 
 void ProgressivePhotonScene::loadObjGeometry()
 {
-	// Floor geometry
-	std::string pgram_ptx(ptxpath("progressivePhotonMap", "parallelogram.cu"));
-	Geometry parallelogram = m_context->createGeometry();
-	parallelogram->setPrimitiveCount(1u);
-	parallelogram->setBoundingBoxProgram(m_context->createProgramFromPTXFile(pgram_ptx, "bounds"));
-	parallelogram->setIntersectionProgram(m_context->createProgramFromPTXFile(pgram_ptx, "intersect"));
-	float3 anchor = make_float3(-64.0f, 0.01f, -64.0f);
-	float3 v1 = make_float3(128.0f, 0.0f, 0.0f);
-	float3 v2 = make_float3(0.0f, 0.0f, 128.0f);
-	float3 normal = cross(v2, v1);
-	normal = normalize(normal);
-	float d = dot(normal, anchor);
-	v1 *= 1.0f / dot(v1, v1);
-	v2 *= 1.0f / dot(v2, v2);
-	float4 plane = make_float4(normal, d);
-	parallelogram["plane"]->setFloat(plane);
-	parallelogram["v1"]->setFloat(v1);
-	parallelogram["v2"]->setFloat(v2);
-	parallelogram["anchor"]->setFloat(anchor);
-
 	//createMaterial
 	std::string path1 = std::string(sutilSamplesPtxDir()) + "/progressivePhotonMap_generated_ppm_rtpass.cu.ptx";
 	std::string path2 = std::string(sutilSamplesPtxDir()) + "/progressivePhotonMap_generated_ppm_ppass.cu.ptx";
@@ -922,13 +916,13 @@ void ProgressivePhotonScene::loadObjGeometry()
 	{
 		std::string objFullPath = relPath + m_church_parts_name[i] + ".obj";
 		float3 translate = make_float3(0,50.4, 0);
-		float3 scale = make_float3(8, 8, 8);
+		float3 scale = make_float3(20, 20, 20);
 		float3 rotateAxis = make_float3(0, 0, 0);
 		float rotateRadius = 0.0f;
 		optix::Transform trans = m_context->createTransform();
 		GeometryGroup tempGroup = m_context->createGeometryGroup();
 		church_parts[i] = Model(objFullPath, m_material, m_accel_desc, NULL, mesh_intersect, mesh_bbox, m_context,
-			i ? church_parts.back().m_geom_group : static_cast<GeometryGroup>(NULL), translate, scale, rotateRadius, rotateAxis);
+								i ? church_parts.back().m_geom_group : static_cast<GeometryGroup>(NULL), translate, scale, rotateRadius, rotateAxis);
 	}
 
 	for (int i = 0; i<m_church_parts_name.size(); ++i)
@@ -945,12 +939,13 @@ void ProgressivePhotonScene::loadObjGeometry()
 
 	//TopGroup->setChildCount(TopGroup->getChildCount() + 1);
 	//TopGroup->setChild(TopGroup->getChildCount() - 1, floorGroup);
-	
+
 	//Participating media
 	{
 		ParticipatingMedium partmedium = ParticipatingMedium(0.05, 0.01);
 		optix::Aabb box;
-		box.set(make_float3(-200, -200, -200), make_float3(200, 200, 200));
+		int boxsize = 500;
+		box.set(make_float3(-boxsize, -boxsize, -boxsize), make_float3(boxsize, boxsize, boxsize));
 		optix::Geometry geometry = m_context->createGeometry();
 
 		//AABInstance participatingMediumCube (partmedium, box); ==
@@ -990,11 +985,11 @@ void ProgressivePhotonScene::createCornellBoxGeometry()
 	// Set up material
 	m_material = m_context->createMaterial();
 	m_material->setClosestHitProgram(rtpass, m_context->createProgramFromPTXFile(ptxpath("progressivePhotonMap", "ppm_rtpass.cu"),
-		"rtpass_closest_hit"));
+																				 "rtpass_closest_hit"));
 	m_material->setClosestHitProgram(ppass, m_context->createProgramFromPTXFile(ptxpath("progressivePhotonMap", "ppm_ppass.cu"),
-		"ppass_closest_hit"));
+																				"ppass_closest_hit"));
 	m_material->setAnyHitProgram(gather, m_context->createProgramFromPTXFile(ptxpath("progressivePhotonMap", "ppm_gather.cu"),
-		"gather_any_hit"));
+																			 "gather_any_hit"));
 
 
 	std::string ptx_path = ptxpath("progressivePhotonMap", "parallelogram.cu");
@@ -1013,83 +1008,83 @@ void ProgressivePhotonScene::createCornellBoxGeometry()
 
 	// Floor
 	gis.push_back(createParallelogram(make_float3(0.0f, 0.0f, 0.0f),
-		make_float3(0.0f, 0.0f, 559.2f),
-		make_float3(556.0f, 0.0f, 0.0f),
-		white));
+									  make_float3(0.0f, 0.0f, 559.2f),
+									  make_float3(556.0f, 0.0f, 0.0f),
+									  white));
 
 	// Ceiling
 	gis.push_back(createParallelogram(make_float3(0.0f, 548.8f, 0.0f),
-		make_float3(556.0f, 0.0f, 0.0f),
-		make_float3(0.0f, 0.0f, 559.2f),
-		white));
+									  make_float3(556.0f, 0.0f, 0.0f),
+									  make_float3(0.0f, 0.0f, 559.2f),
+									  white));
 
 	// Back wall
 	gis.push_back(createParallelogram(make_float3(0.0f, 0.0f, 559.2f),
-		make_float3(0.0f, 548.8f, 0.0f),
-		make_float3(556.0f, 0.0f, 0.0f),
-		white));
+									  make_float3(0.0f, 548.8f, 0.0f),
+									  make_float3(556.0f, 0.0f, 0.0f),
+									  white));
 
 	// Right wall
 	gis.push_back(createParallelogram(make_float3(0.0f, 0.0f, 0.0f),
-		make_float3(0.0f, 548.8f, 0.0f),
-		make_float3(0.0f, 0.0f, 559.2f),
-		green));
+									  make_float3(0.0f, 548.8f, 0.0f),
+									  make_float3(0.0f, 0.0f, 559.2f),
+									  green));
 
 	// Left wall
 	gis.push_back(createParallelogram(make_float3(556.0f, 0.0f, 0.0f),
-		make_float3(0.0f, 0.0f, 559.2f),
-		make_float3(0.0f, 548.8f, 0.0f),
-		red));
+									  make_float3(0.0f, 0.0f, 559.2f),
+									  make_float3(0.0f, 548.8f, 0.0f),
+									  red));
 
 	// Short block
 	gis.push_back(createParallelogram(make_float3(130.0f, 165.0f, 65.0f),
-		make_float3(-48.0f, 0.0f, 160.0f),
-		make_float3(160.0f, 0.0f, 49.0f),
-		white));
+									  make_float3(-48.0f, 0.0f, 160.0f),
+									  make_float3(160.0f, 0.0f, 49.0f),
+									  white));
 	gis.push_back(createParallelogram(make_float3(290.0f, 0.0f, 114.0f),
-		make_float3(0.0f, 165.0f, 0.0f),
-		make_float3(-50.0f, 0.0f, 158.0f),
-		white));
+									  make_float3(0.0f, 165.0f, 0.0f),
+									  make_float3(-50.0f, 0.0f, 158.0f),
+									  white));
 	gis.push_back(createParallelogram(make_float3(130.0f, 0.0f, 65.0f),
-		make_float3(0.0f, 165.0f, 0.0f),
-		make_float3(160.0f, 0.0f, 49.0f),
-		white));
+									  make_float3(0.0f, 165.0f, 0.0f),
+									  make_float3(160.0f, 0.0f, 49.0f),
+									  white));
 	gis.push_back(createParallelogram(make_float3(82.0f, 0.0f, 225.0f),
-		make_float3(0.0f, 165.0f, 0.0f),
-		make_float3(48.0f, 0.0f, -160.0f),
-		white));
+									  make_float3(0.0f, 165.0f, 0.0f),
+									  make_float3(48.0f, 0.0f, -160.0f),
+									  white));
 	gis.push_back(createParallelogram(make_float3(240.0f, 0.0f, 272.0f),
-		make_float3(0.0f, 165.0f, 0.0f),
-		make_float3(-158.0f, 0.0f, -47.0f),
-		white));
+									  make_float3(0.0f, 165.0f, 0.0f),
+									  make_float3(-158.0f, 0.0f, -47.0f),
+									  white));
 
 	// Tall block
 	gis.push_back(createParallelogram(make_float3(423.0f, 330.0f, 247.0f),
-		make_float3(-158.0f, 0.0f, 49.0f),
-		make_float3(49.0f, 0.0f, 159.0f),
-		white));
+									  make_float3(-158.0f, 0.0f, 49.0f),
+									  make_float3(49.0f, 0.0f, 159.0f),
+									  white));
 	gis.push_back(createParallelogram(make_float3(423.0f, 0.0f, 247.0f),
-		make_float3(0.0f, 330.0f, 0.0f),
-		make_float3(49.0f, 0.0f, 159.0f),
-		white));
+									  make_float3(0.0f, 330.0f, 0.0f),
+									  make_float3(49.0f, 0.0f, 159.0f),
+									  white));
 	gis.push_back(createParallelogram(make_float3(472.0f, 0.0f, 406.0f),
-		make_float3(0.0f, 330.0f, 0.0f),
-		make_float3(-158.0f, 0.0f, 50.0f),
-		white));
+									  make_float3(0.0f, 330.0f, 0.0f),
+									  make_float3(-158.0f, 0.0f, 50.0f),
+									  white));
 	gis.push_back(createParallelogram(make_float3(314.0f, 0.0f, 456.0f),
-		make_float3(0.0f, 330.0f, 0.0f),
-		make_float3(-49.0f, 0.0f, -160.0f),
-		white));
+									  make_float3(0.0f, 330.0f, 0.0f),
+									  make_float3(-49.0f, 0.0f, -160.0f),
+									  white));
 	gis.push_back(createParallelogram(make_float3(265.0f, 0.0f, 296.0f),
-		make_float3(0.0f, 330.0f, 0.0f),
-		make_float3(158.0f, 0.0f, -49.0f),
-		white));
+									  make_float3(0.0f, 330.0f, 0.0f),
+									  make_float3(158.0f, 0.0f, -49.0f),
+									  white));
 
 	// Light
 	gis.push_back(createParallelogram(make_float3(343.0f, 548.7f, 227.0f),
-		make_float3(0.0f, 0.0f, 105.0f),
-		make_float3(-130.0f, 0.0f, 0.0f),
-		black));
+									  make_float3(0.0f, 0.0f, 105.0f),
+									  make_float3(-130.0f, 0.0f, 0.0f),
+									  black));
 	gis.back()["emitted"]->setFloat(light);
 
 
@@ -1115,30 +1110,123 @@ void ProgressivePhotonScene::createCornellBoxGeometry()
 void printUsageAndExit(const std::string& argv0, bool doExit = true)
 {
 	std::cerr
-		<< "Usage  : " << argv0 << " [options]\n"
-		<< "App options:\n"
-		<< "  -h  | --help                               Print this usage message\n"
-		<< "  -t  | --timeout <sec>                      Seconds before stopping rendering. Set to 0 for no stopping.\n"
-		<< "        --cornell-box                        Display Cornell Box scene\n"
-		<< "        --photon-dim <photons>               Width and height of photon launch grid. Default = 512.\n"
-#ifndef RELEASE_PUBLIC
-		<< "  -pt | --print-timings                      Print timing information\n"
-		<< " -ddb | --display-debug-buffer               Display the debug buffer information\n"
-#endif
-		<< std::endl;
+	<< "Usage  : " << argv0 << " [options]\n"
+	<< "App options:\n"
+	<< "  -h  | --help                               Print this usage message\n"
+	<< "  -t  | --timeout <sec>                      Seconds before stopping rendering. Set to 0 for no stopping.\n"
+	<< "        --cornell-box                        Display Cornell Box scene\n"
+	<< "        --photon-dim <photons>               Width and height of photon launch grid. Default = 512.\n"
+	#ifndef RELEASE_PUBLIC
+	<< "  -pt | --print-timings                      Print timing information\n"
+	<< " -ddb | --display-debug-buffer               Display the debug buffer information\n"
+	#endif
+	<< std::endl;
 	GLUTDisplay::printUsage();
 
 	std::cerr
-		<< "App keystrokes:\n"
-		<< "  i Move light up\n"
-		<< "  j Move light left\n"
-		<< "  k Move light down\n"
-		<< "  l Move light right\n"
-		<< std::endl;
+	<< "App keystrokes:\n"
+	<< "  i Move light up\n"
+	<< "  j Move light left\n"
+	<< "  k Move light down\n"
+	<< "  l Move light right\n"
+	<< std::endl;
 
 	if (doExit) exit(1);
 }
 
+void ProgressivePhotonScene::createLightParameters(const std::vector<float3> squareCor, float3 dist, float3& v1, float3& v2, float3& anchor)
+{
+	//sqareCor contains v0 -----> v1
+	//                   |
+	//					 V
+	//					 v2
+	float3 v1Origin = squareCor[1] - squareCor[0];
+	float3 v2Origin = squareCor[2] + dist - squareCor[0];
+	float3 anchorOrigin = squareCor[0];
+	//transform parameters
+	float3 translate = optix::make_float3(0, 50.4, 0);
+	float3 scale = optix::make_float3(20, 20, 20);
+	float3 rotateAxis = optix::make_float3(0, 0, 0);
+	float rotateRadius = 0.0f;
+	//transform matrix
+	Matrix4x4 XForm = Matrix4x4::identity();
+	XForm = Matrix4x4::scale(scale) * XForm;
+	XForm = Matrix4x4::rotate(rotateRadius, rotateAxis) * XForm;
+	XForm = Matrix4x4::translate(translate) * XForm;
+	//transform v1, v2, anchor
+	optix::float4 v1Trans = XForm * make_float4(v1Origin, 1.0f);
+	optix::float4 v2Trans = XForm * make_float4(v2Origin, 1.0f);
+	optix::float4 anchorTrans = XForm * make_float4(anchorOrigin, 1.0f);
+	//transform back to float3
+	v1Trans /= v1Trans.w;
+	v2Trans /= v2Trans.w;
+	anchorTrans /= anchorTrans.w;
+	v1.x = v1Trans.x; v1.y = v1Trans.y; v1.z = v1Trans.z;
+	v2.x = v2Trans.x; v2.y = v2Trans.y; v2.z = v2Trans.z;
+	anchor.x = anchorTrans.x; anchor.y = anchorTrans.y; anchor.z = anchorTrans.z;
+	return;
+}
+
+void ProgressivePhotonScene::createLights() {
+	m_numLights = 5;
+	m_multiLights = new PPMLight[m_numLights];
+
+	std::vector<std::vector<float3> > squareCors;
+	std::vector<float3> protrudingDist;
+	std::vector<float3> tmpSquareCors;
+	protrudingDist.clear();
+
+	//the front wall's parameters!
+	//the round window
+
+	tmpSquareCors.clear();
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -1.2, -1.5));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -1.2, 1.5));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -4.2, -1.5));
+	protrudingDist.push_back(optix::make_float3(-3.0, 0.0, 0.0));
+	squareCors.push_back(tmpSquareCors);
+
+	//the left window
+	tmpSquareCors.clear();
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.0, -6.2));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.0, -5));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -13.0, -6.2));
+	protrudingDist.push_back(optix::make_float3(-4.0, 0.0, 0.0));
+	squareCors.push_back(tmpSquareCors);
+
+	//the right window
+	tmpSquareCors.clear();
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.0, 5));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.0, 5));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -13.0, 6.2));
+	protrudingDist.push_back(optix::make_float3(-4.0, 0.0, 0.0));
+	squareCors.push_back(tmpSquareCors);
+
+	//the over-door window
+	tmpSquareCors.clear();
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.4, -1.6));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.4, 1.6));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, -11.5, -1.6));
+	protrudingDist.push_back(optix::make_float3(-2.1, 0.0, 0.0));
+	squareCors.push_back(tmpSquareCors);
+
+	//the top small round window
+	tmpSquareCors.clear();
+	tmpSquareCors.push_back(optix::make_float3(-21.0, 3.1, -1.0));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, 3.1, 1.0));
+	tmpSquareCors.push_back(optix::make_float3(-21.0, 1.3, -1.0));
+	protrudingDist.push_back(optix::make_float3(-1.8, 0.0, 0.0));
+	squareCors.push_back(tmpSquareCors);
+
+	for (int i = 0; i < m_numLights; ++i) {
+		m_multiLights[i].power = 2*make_float3(0.5e5f, 0.4e5f, 0.2e5f);
+		m_multiLights[i].is_area_light = 1;
+		createLightParameters(squareCors[i], protrudingDist[i], m_multiLights[i].v1, m_multiLights[i].v2, m_multiLights[i].anchor);
+		m_multiLights[i].direction = normalize(cross(m_multiLights[i].v1, m_multiLights[i].v2));
+		//printf("v1: "); print(m_multiLights[i].v1);
+		//printf("v2: "); print(m_multiLights[i].v2);
+	}
+}
 
 int main(int argc, char** argv)
 {
@@ -1198,7 +1286,7 @@ int main(int argc, char** argv)
 		if (cornell_box) scene.setSceneCornellBox();
 		GLUTDisplay::setProgressiveDrawingTimeout(timeout);
 		GLUTDisplay::setUseSRGB(true);
-		GLUTDisplay::run("ProgressivePhotonScene", &scene, GLUTDisplay::CDProgressive);
+		GLUTDisplay::run("ProgressivePhotonScene", &scene, GLUTDisplay::CDAnimated);
 	}
 	catch (Exception& e){
 		sutilReportError(e.getErrorString().c_str());

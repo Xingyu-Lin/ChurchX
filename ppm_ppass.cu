@@ -81,6 +81,7 @@ static __device__ __inline__ void generateSpotLightPhoton( const PPMLight& light
   square_sample = square_sample * atanf( light.radius );
   float x = square_sample.x;
   float y = square_sample.y;
+  x/=2; y/=2;
   float z = sqrtf( fmaxf( 0.0f, 1.0f - x*x - y*y ) );
 
   // Now transform into light space
@@ -99,13 +100,13 @@ RT_PROGRAM void ppass_camera()
   float2 direction_sample = make_float2(
       ( static_cast<float>( launch_index.x ) + rnd( seed.x ) ) / static_cast<float>( size.x ),
       ( static_cast<float>( launch_index.y ) + rnd( seed.y ) ) / static_cast<float>( size.y ) );
+  direction_sample = make_float2(0.0f);
   float3 ray_origin, ray_direction;
   if( light.is_area_light ) {
     generateAreaLightPhoton( light, direction_sample, ray_origin, ray_direction );
   } else {
     generateSpotLightPhoton( light, direction_sample, ray_origin, ray_direction );
   }
-
   optix::Ray ray(ray_origin, ray_direction, ppass_and_gather_ray_type, scene_epsilon );
 
   // Initialize our photons

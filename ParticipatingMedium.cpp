@@ -6,6 +6,7 @@
 
 #include "ParticipatingMedium.h"
 #include "ppm.h"
+#include "SampleScene.h"
 
 
 bool ParticipatingMedium::m_optixMaterialIsCreated = false;
@@ -57,6 +58,6 @@ void ParticipatingMedium::registerMaterialWithShadowProgram(optix::Context & con
 	//	m_optixAnyHitProgram = context->createProgramFromPTXFile("DirectRadianceEstimation.cu.ptx", "gatherAnyHitOnNonEmitter");
 	//	m_hasLoadedOptixAnyHitProgram = true;
 	//}
-	//material->setAnyHitProgram(RayTypes::shadow_ray_type, m_optixAnyHitProgram);
+	//material->setAnyHitProgram(shadow_ray_type, m_optixAnyHitProgram);
 	//TODO:
 }
