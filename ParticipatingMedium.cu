@@ -121,7 +121,6 @@ RT_PROGRAM void closestHitPhoton()
 {
     //rtPrintf("Hello1\n");
     const float sigma_t = sigma_a + sigma_s;
-
     photonPrd.ray_depth++;
 
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
@@ -143,14 +142,15 @@ RT_PROGRAM void closestHitPhoton()
     float scatterLocationT = - logf(1-sample)/sigma_t;
     float3 scatterPosition = hitPoint + scatterLocationT*ray.direction;
 
+    photonPrd.ray_depth = -1;
     int depth = photonPrd.ray_depth;
-
     // We need to see if anything obstructs the ray in the interval from the hitpoint to the scatter location.
     // If nothings obstructs then we scatter at eventPosition. Otherwise, the photon continues on its path and we don't do anything
     // when we return to this stack frame. We keep the photonPRD depth on the stack to compare it when the rtTrace returns.
 
     Ray newRay(hitPoint, ray.direction, photon_in_participating_medium, 0.001, scatterLocationT);
     rtTrace(top_object, newRay, photonPrd);
+    //rtPrintf("%d\n",photonPrd.ray_depth);
 
     // If depth is unmodified, no surface was hit from hitpoint to scatterLocation, so we store it as a scatter event.
     // We also scatter a photon in a new direction sampled by the phase function at this location.
@@ -189,12 +189,13 @@ RT_PROGRAM void closestHitPhoton()
 
         //OPTIX_DEBUG_PRINT(photonPrd.depth-1, "Not interrupted. Store, scatter P(%.2f %.2f %.2f) D(%.2f %.2f %.2f)\n", scatterPosition.x, scatterPosition.y, scatterPosition.z,
           //                scatterDirection.x, scatterDirection.y, scatterDirection.z);
-        Ray scatteredRay(scatterPosition, scatterDirection, ppass_and_gather_ray_type, 0.001, RT_DEFAULT_MAX);
+        Ray scatteredRay(scatterPosition, scatterDirection, photon_in_participating_medium, 0.001, RT_DEFAULT_MAX);
         rtTrace(top_object, scatteredRay, photonPrd);
 
     }
     else
     {
+        //rtPrintf("found surface!\n");
         //OPTIX_DEBUG_PRINT(depth-1, "Found surface in [0,t], no scatter!\n");
     }
 }

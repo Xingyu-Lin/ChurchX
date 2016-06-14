@@ -277,7 +277,7 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 
 	m_context["max_depth"]->setUint(3);
 	m_context["max_photon_count"]->setUint(MAX_PHOTON_COUNT);
-	m_context["scene_epsilon"]->setFloat(1.e-1f);
+	m_context["scene_epsilon"]->setFloat(1.e-4f);
 	m_context["alpha"]->setFloat(0.7f);
 	m_context["total_emitted"]->setFloat(0.0f);
 	m_context["frame_number"]->setFloat(0.0f);
@@ -419,10 +419,9 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 		loadObjGeometry();
 
 
-
-		camera_data = InitialCameraData(make_float3(345.0f, -180.0f, -0.0f), // eye
-										make_float3(-400.0f, 0.0f, 0.0f),      // lookat
-										make_float3(0.0f, 1.0f, 0.0f),     // up
+		camera_data = InitialCameraData(make_float3(-345.579, -141.678, -13.3228), // eye
+										make_float3(236.489, -437.131, -414.981),      // lookat
+										make_float3(0, 1, 0),     // up
 										45.0f);                              // vfov
 		bool useWindowLight = true;
 		if (!useWindowLight)
@@ -1140,30 +1139,26 @@ void ProgressivePhotonScene::createLightParameters(const std::vector<float3> squ
 	//                   |
 	//					 V
 	//					 v2
-	float3 v1Origin = squareCor[1] - squareCor[0] + dist;
-	float3 v2Origin = squareCor[2] - squareCor[0] + dist;
-	float3 anchorOrigin = squareCor[0] + dist;
-	//transform parameters
 	float3 translate = optix::make_float3(0, 50.4, 0);
 	float3 scale = optix::make_float3(20, 20, 20);
 	float3 rotateAxis = optix::make_float3(0, 0, 0);
 	float rotateRadius = 0.0f;
+
 	//transform matrix
 	Matrix4x4 XForm = Matrix4x4::identity();
 	XForm = Matrix4x4::scale(scale) * XForm;
 	XForm = Matrix4x4::rotate(rotateRadius, rotateAxis) * XForm;
 	XForm = Matrix4x4::translate(translate) * XForm;
-	//transform v1, v2, anchor
-	optix::float4 v1Trans = XForm * make_float4(v1Origin, 1.0f);
-	optix::float4 v2Trans = XForm * make_float4(v2Origin, 1.0f);
-	optix::float4 anchorTrans = XForm * make_float4(anchorOrigin, 1.0f);
-	//transform back to float3
-	v1Trans /= v1Trans.w;
-	v2Trans /= v2Trans.w;
-	anchorTrans /= anchorTrans.w;
-	v1.x = v1Trans.x; v1.y = v1Trans.y; v1.z = v1Trans.z;
-	v2.x = v2Trans.x; v2.y = v2Trans.y; v2.z = v2Trans.z;
-	anchor.x = anchorTrans.x; anchor.y = anchorTrans.y; anchor.z = anchorTrans.z;
+
+	std::vector <float3> transCor;
+	for (int i = 0; i < 3; ++i) {
+		float4 newCor = XForm * make_float4(squareCor[i], 1.0);
+		newCor /= newCor.w;
+		transCor.push_back(make_float3(newCor.x, newCor.y, newCor.z));
+	}
+	v1 = transCor[1] - transCor[0];
+	v2 = transCor[2] - transCor[0];
+	anchor = transCor[0];
 	return;
 }
 
@@ -1178,12 +1173,20 @@ void ProgressivePhotonScene::createLights() {
 
 
 	//side windows
+	//original
+	//tmpSquareCors.push_back(optix::make_float3(-7.13, -13.51, -8.20));
+	//tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -8.20));
+	//tmpSquareCors.push_back(optix::make_float3(-7.13, -10.76, -8.20));
+	//only down
+	//tmpSquareCors.push_back(optix::make_float3(-19, -13.51, -8.20));
+	//tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -10.20));
+	//tmpSquareCors.push_back(optix::make_float3(-19, -10.76, -10.20));
 
 	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-7.13, -13.51, -8.20));
-	tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -8.20));
-	tmpSquareCors.push_back(optix::make_float3(-7.13, -10.76, -8.20));
-	protrudingDist.push_back(optix::make_float3(0.0, 0.0, 0.01));
+	tmpSquareCors.push_back(optix::make_float3(-7.13, -13.51, -10.20));
+	tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -10.20));
+	tmpSquareCors.push_back(optix::make_float3(-7.13, -8.76, -8.20));
+	protrudingDist.push_back(optix::make_float3(0.0, 0.0, -0.01));
 	squareCors.push_back(tmpSquareCors);
 
 	//the front wall's parameters!
@@ -1233,9 +1236,12 @@ void ProgressivePhotonScene::createLights() {
 		m_multiLights[i].is_area_light = 1;
 		createLightParameters(squareCors[i], protrudingDist[i], m_multiLights[i].v1, m_multiLights[i].v2, m_multiLights[i].anchor);
 		m_multiLights[i].direction = normalize(cross(m_multiLights[i].v1, m_multiLights[i].v2));
+		//Matrix4x4 Rot = Matrix4x4::rotate(0, m_multiLights[i].v1);
+		//m_multiLights[i].v1 = make_float3(Rot * make_float4(m_multiLights[i].v1, 1.0f));
 		//printf("v1: "); print(m_multiLights[i].v1);
 		//printf("v2: "); print(m_multiLights[i].v2);
 	}
+
 }
 
 int main(int argc, char** argv)
@@ -1296,7 +1302,7 @@ int main(int argc, char** argv)
 		if (cornell_box) scene.setSceneCornellBox();
 		GLUTDisplay::setProgressiveDrawingTimeout(timeout);
 		GLUTDisplay::setUseSRGB(true);
-		GLUTDisplay::run("ProgressivePhotonScene", &scene, GLUTDisplay::CDProgressive);
+		GLUTDisplay::run("ProgressivePhotonScene", &scene, GLUTDisplay::CDAnimated);
 	}
 	catch (Exception& e){
 		sutilReportError(e.getErrorString().c_str());

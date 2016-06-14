@@ -99,10 +99,10 @@ RT_PROGRAM void ppass_camera()
   uint    pm_index = (launch_index.y * size.x + launch_index.x) * max_photon_count;
   uint2   seed     = photon_rnd_seeds[launch_index]; // No need to reset since we dont reuse this seed
 
-  float2 direction_sample = make_float2(
-      ( static_cast<float>( launch_index.x ) + rnd( seed.x ) ) / static_cast<float>( size.x ),
-      ( static_cast<float>( launch_index.y ) + rnd( seed.y ) ) / static_cast<float>( size.y ) );
-  //direction_sample = make_float2(0.0f);
+  //float2 direction_sample = make_float2(
+    //  ( static_cast<float>( launch_index.x ) + rnd( seed.x ) ) / static_cast<float>( size.x ),
+      // ( static_cast<float>( launch_index.y ) + rnd( seed.y ) ) / static_cast<float>( size.y ) );
+  float2 direction_sample = make_float2(rnd( seed.x ), rnd( seed.y ));
   float3 ray_origin, ray_direction;
   if( light.is_area_light ) {
     generateAreaLightPhoton( light, direction_sample, ray_origin, ray_direction );
@@ -169,12 +169,16 @@ RT_PROGRAM void ppass_closest_hit()
     // Make reflection ray
     new_ray_dir = reflect( ray.direction, ffnormal );
   }
-
+  if (ray.ray_type == photon_in_participating_medium && hit_record.ray_depth == -1)
+  {
+    //rtPrintf("ok\n");
+  }
   hit_record.ray_depth++;
+  //rtPrintf("%d\n",hit_record.ray_depth);
   if ( hit_record.num_deposits >= max_photon_count || hit_record.ray_depth >= max_depth)
     return;
 
-  optix::Ray new_ray( hit_point, new_ray_dir, ppass_and_gather_ray_type, scene_epsilon );
-  rtTrace(top_object, new_ray, hit_record);
+  //optix::Ray new_ray( hit_point, new_ray_dir, ppass_and_gather_ray_type, scene_epsilon );
+  //rtTrace(top_object, new_ray, hit_record);
 }
 

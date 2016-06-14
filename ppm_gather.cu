@@ -220,7 +220,7 @@ RT_PROGRAM void gather()
   //rec_atten_Kd += make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
   rtpass_output_buffer[launch_index] = rec;
-  //float3 final_color = direct_flux;
+  //float3 final_color = indirect_flux;
   float3 final_color = indirect_flux + direct_flux + rec_volumetricRadiance / total_emitted + ambient_light*rec_atten_Kd;
   //float3 final_color = indirect_flux ;
 
