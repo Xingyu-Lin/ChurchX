@@ -178,11 +178,18 @@ RT_PROGRAM void gather()
   float3 point_on_light;
   float dist_scale;
   if( light.is_area_light ) {
-    uint2  seed   = image_rnd_seeds[launch_index];
-    float2 sample = make_float2( rnd( seed.x ), rnd( seed.y ) ); 
-    image_rnd_seeds[launch_index] = seed;
-    point_on_light = light.anchor + sample.x*light.v1 + sample.y*light.v2; 
-    dist_scale = 1.0f;
+    if (0)
+    {
+      uint2 seed = image_rnd_seeds[launch_index];
+      float2 sample = make_float2(rnd(seed.x), rnd(seed.y));
+      image_rnd_seeds[launch_index] = seed;
+      point_on_light = light.anchor + sample.x * light.v1 + sample.y * light.v2;
+      dist_scale = 1.0f;
+    } else
+    {
+      dist_scale = dot((rec_position - light.anchor), light.direction);
+      point_on_light = rec_position - dist_scale * light.direction;
+    }
   } else {
     point_on_light = light.position;
     dist_scale = light.radius / ( M_PIf * 0.5f); 

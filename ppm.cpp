@@ -207,7 +207,7 @@ const unsigned int ProgressivePhotonScene::HEIGHT = 768u;
 const unsigned int ProgressivePhotonScene::MAX_PHOTON_COUNT = 5u;
 const float ProgressivePhotonScene::PPMRadius = 1.0f;
 const float ProgressivePhotonScene::m_sigma_a = 0.000f;
-const float ProgressivePhotonScene::m_sigma_s = 0.02f;
+const float ProgressivePhotonScene::m_sigma_s = 0.01f;
 
 bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
 {
@@ -1183,9 +1183,9 @@ void ProgressivePhotonScene::createLights() {
 	//tmpSquareCors.push_back(optix::make_float3(-19, -10.76, -10.20));
 
 	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-7.13, -13.51, -10.20));
-	tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -10.20));
-	tmpSquareCors.push_back(optix::make_float3(-7.13, -8.76, -8.20));
+	tmpSquareCors.push_back(optix::make_float3(-19.13, -13.51, -12.20));
+	tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -12.20));
+	tmpSquareCors.push_back(optix::make_float3(-19.13, -8.76, -8.20));
 	protrudingDist.push_back(optix::make_float3(0.0, 0.0, -0.01));
 	squareCors.push_back(tmpSquareCors);
 
@@ -1232,7 +1232,7 @@ void ProgressivePhotonScene::createLights() {
 	squareCors.push_back(tmpSquareCors);
 
 	for (int i = 0; i < m_numLights; ++i) {
-		m_multiLights[i].power = 2*make_float3(0.5e4f, 0.4e4f, 0.2e4f);
+		m_multiLights[i].power = 2*make_float3(0.5e6f, 0.4e6f, 0.2e6f);
 		m_multiLights[i].is_area_light = 1;
 		createLightParameters(squareCors[i], protrudingDist[i], m_multiLights[i].v1, m_multiLights[i].v2, m_multiLights[i].anchor);
 		m_multiLights[i].direction = normalize(cross(m_multiLights[i].v1, m_multiLights[i].v2));
