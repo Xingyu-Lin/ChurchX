@@ -49,6 +49,9 @@ using namespace optix;
 
 #define NUM_VOLUMETRIC_PHOTONS 2000000
 
+// For demo
+static const bool sideWall = false;
+static const bool golden = false;
 // Finds the smallest power of 2 greater or equal to x.
 inline unsigned int pow2roundup(unsigned int x)
 {
@@ -418,11 +421,16 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 		if (loadObjConfig("./data/churchdata/config.txt") == -1) return;
 		loadObjGeometry();
 
-
+		if (sideWall)
 		camera_data = InitialCameraData(make_float3(-345.579, -141.678, -13.3228), // eye
 										make_float3(236.489, -437.131, -414.981),      // lookat
 										make_float3(0, 1, 0),     // up
 										45.0f);                              // vfov
+		else
+		camera_data = InitialCameraData(make_float3(214.823, -103.356, 73.8156), // eye
+										make_float3(-514.297, -213.848, -134.995),      // lookat
+										make_float3(0, 1, 0),     // up
+										55.0f);
 		bool useWindowLight = true;
 		if (!useWindowLight)
 		{
@@ -1169,13 +1177,15 @@ void ProgressivePhotonScene::createLights() {
 	std::vector<std::vector<float3> > squareCors;
 	std::vector<float3> tmpSquareCors;
 
-	//front side wall light 
-	/*tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-32.3, -9.0, 6.3));
-	tmpSquareCors.push_back(optix::make_float3(-32.3, -9.0, -6.3));
-	tmpSquareCors.push_back(optix::make_float3(-20.2, 3.1, 6.2));
-	squareCors.push_back(tmpSquareCors);*/
-
+	//front side wall light
+	if (!sideWall)
+	{
+		tmpSquareCors.clear();
+		tmpSquareCors.push_back(optix::make_float3(-32.3, -9.0, 6.3));
+		tmpSquareCors.push_back(optix::make_float3(-32.3, -9.0, -6.3));
+		tmpSquareCors.push_back(optix::make_float3(-20.2, 3.1, 6.2));
+		squareCors.push_back(tmpSquareCors);
+	}
 	/*tmpSquareCors.clear();
 	tmpSquareCors.push_back(optix::make_float3(-24.3, -4.1, 6.3));
 	tmpSquareCors.push_back(optix::make_float3(-26.3, -4.1, -6.3));
@@ -1183,14 +1193,19 @@ void ProgressivePhotonScene::createLights() {
 	squareCors.push_back(tmpSquareCors);*/
 
 	//left side wall light
-	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-19.13, -14.00, -14.20));
-	tmpSquareCors.push_back(optix::make_float3(-6.00, -14.00, -14.20));
-	tmpSquareCors.push_back(optix::make_float3(-19.13, -8.76, -10.30));
-	squareCors.push_back(tmpSquareCors);
-
+	if (sideWall)
+	{
+		tmpSquareCors.clear();
+		tmpSquareCors.push_back(optix::make_float3(-19.13, -14.00, -14.20));
+		tmpSquareCors.push_back(optix::make_float3(-6.00, -14.00, -14.20));
+		tmpSquareCors.push_back(optix::make_float3(-19.13, -8.76, -10.30));
+		squareCors.push_back(tmpSquareCors);
+	}
 	for (int i = 0; i < m_numLights; ++i) {
-		m_multiLights[i].power = 5*make_float3(0.4e6f, 0.5e6f, 0.5e6f);
+		if (!golden)
+			m_multiLights[i].power = 5*make_float3(0.4e6f, 0.5e6f, 0.5e6f);
+		else
+			m_multiLights[i].power = 5 * make_float3(0.6e6f, 0.4e6f, 0.2e6f);
 		m_multiLights[i].is_area_light = 1;
 		createLightParameters(squareCors[i], m_multiLights[i].v1, m_multiLights[i].v2, m_multiLights[i].anchor);
 		m_multiLights[i].direction = normalize(cross(m_multiLights[i].v1, m_multiLights[i].v2));
