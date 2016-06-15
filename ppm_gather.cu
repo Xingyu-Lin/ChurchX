@@ -178,7 +178,7 @@ RT_PROGRAM void gather()
   float3 point_on_light;
   float dist_scale;
   if( light.is_area_light ) {
-    if (0)
+    if (1)
     {
       uint2 seed = image_rnd_seeds[launch_index];
       float2 sample = make_float2(rnd(seed.x), rnd(seed.y));

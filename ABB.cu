@@ -34,7 +34,7 @@ RT_PROGRAM void intersect(int primIdx)
 	 (ray.ray_type == ppass_and_gather_ray_type || ray.ray_type == rtpass_ray_type)
 	)
 	{
-		if (rtPotentialIntersection(0.11f))
+		if (rtPotentialIntersection(0.00011f))
 		{
 			geometricNormal = -ray.direction;
 			shadingNormal = geometricNormal;
@@ -45,10 +45,10 @@ RT_PROGRAM void intersect(int primIdx)
 
 	float3 t0 = (cuboidMin - ray.origin)/ray.direction;
 	float3 t1 = (cuboidMax - ray.origin)/ray.direction;
-	float3 near = fminf(t0, t1);
-	float3 far = fmaxf(t0, t1);
-	float tmin = fmaxf( near );
-	float tmax = fminf( far );
+	float3 Near = fminf(t0, t1);
+	float3 Far = fmaxf(t0, t1);
+	float tmin = fmaxf( Near );
+	float tmax = fminf( Far );
 
 	if(tmin <= tmax) {
 		bool check_second = true;

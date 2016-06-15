@@ -138,7 +138,7 @@ public:
 	bool   keyPressed(unsigned char key, int x, int y);
 	void   trace(const RayGenCameraData& camera_data);
 	void   doResize(unsigned int width, unsigned int height);
-	void createLightParameters(const std::vector<float3> squareCor, float3 dist, float3& v1, float3& v2, float3& anchor);
+	void createLightParameters(const std::vector<float3> squareCor, float3& v1, float3& v2, float3& anchor);
 	void createLights();
 
 	Buffer getOutputBuffer();
@@ -205,9 +205,9 @@ private:
 const unsigned int ProgressivePhotonScene::WIDTH = 768u;
 const unsigned int ProgressivePhotonScene::HEIGHT = 768u;
 const unsigned int ProgressivePhotonScene::MAX_PHOTON_COUNT = 5u;
-const float ProgressivePhotonScene::PPMRadius = 1.0f;
+const float ProgressivePhotonScene::PPMRadius = 2.0f;
 const float ProgressivePhotonScene::m_sigma_a = 0.000f;
-const float ProgressivePhotonScene::m_sigma_s = 0.01f;
+const float ProgressivePhotonScene::m_sigma_s = 0.001f;
 
 bool ProgressivePhotonScene::keyPressed(unsigned char key, int x, int y)
 {
@@ -427,7 +427,7 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 		if (!useWindowLight)
 		{
 			m_light.is_area_light = 0;
-			m_light.position = 500.0f * sphericalToCartesian(m_light_theta, m_light_phi);
+			m_light.position = 1000.0f * sphericalToCartesian(m_light_theta, m_light_phi);
 			//printf("%f, %f, %f", m_light.position.x, m_light.position.y, m_light.position.z);
 			//m_light.position = make_float3(-400.0f, -160.0f, -345.0f);
 			m_light.direction = normalize(make_float3(0.0f, 0.0f, 0.0f) - m_light.position);
@@ -440,7 +440,7 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 			m_context["light"]->setUserData(sizeof(PPMLight), m_multiLights );
 			//TODO set to m_numLights * sizeof(PPMLight)
 		}
-		m_context["rtpass_default_radius2"]->setFloat(10.0f);// 0.25f);
+		m_context["rtpass_default_radius2"]->setFloat(20.0f);// 0.25f);
 		m_context["ambient_light"]->setFloat(0.1f, 0.1f, 0.1f);
 		std::string full_path = std::string(sutilSamplesDir()) + "/tutorial/data/CedarCity.hdr";
 		const float3 default_color = make_float3(0.8f, 0.88f, 0.97f);
@@ -1133,7 +1133,7 @@ void printUsageAndExit(const std::string& argv0, bool doExit = true)
 	if (doExit) exit(1);
 }
 
-void ProgressivePhotonScene::createLightParameters(const std::vector<float3> squareCor, float3 dist, float3& v1, float3& v2, float3& anchor)
+void ProgressivePhotonScene::createLightParameters(const std::vector<float3> squareCor, float3& v1, float3& v2, float3& anchor)
 {
 	//sqareCor contains v0 -----> v1
 	//                   |
@@ -1163,78 +1163,36 @@ void ProgressivePhotonScene::createLightParameters(const std::vector<float3> squ
 }
 
 void ProgressivePhotonScene::createLights() {
-	m_numLights = 6;
+	m_numLights = 1;
 	m_multiLights = new PPMLight[m_numLights];
 
 	std::vector<std::vector<float3> > squareCors;
-	std::vector<float3> protrudingDist;
 	std::vector<float3> tmpSquareCors;
-	protrudingDist.clear();
 
+	//front side wall light 
+	/*tmpSquareCors.clear();
+	tmpSquareCors.push_back(optix::make_float3(-32.3, -9.0, 6.3));
+	tmpSquareCors.push_back(optix::make_float3(-32.3, -9.0, -6.3));
+	tmpSquareCors.push_back(optix::make_float3(-20.2, 3.1, 6.2));
+	squareCors.push_back(tmpSquareCors);*/
 
-	//side windows
-	//original
-	//tmpSquareCors.push_back(optix::make_float3(-7.13, -13.51, -8.20));
-	//tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -8.20));
-	//tmpSquareCors.push_back(optix::make_float3(-7.13, -10.76, -8.20));
-	//only down
-	//tmpSquareCors.push_back(optix::make_float3(-19, -13.51, -8.20));
-	//tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -10.20));
-	//tmpSquareCors.push_back(optix::make_float3(-19, -10.76, -10.20));
+	/*tmpSquareCors.clear();
+	tmpSquareCors.push_back(optix::make_float3(-24.3, -4.1, 6.3));
+	tmpSquareCors.push_back(optix::make_float3(-26.3, -4.1, -6.3));
+	tmpSquareCors.push_back(optix::make_float3(-20.2, 0.0, 6.2));
+	squareCors.push_back(tmpSquareCors);*/
 
+	//left side wall light
 	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-19.13, -13.51, -12.20));
-	tmpSquareCors.push_back(optix::make_float3(-5.98, -13.51, -12.20));
-	tmpSquareCors.push_back(optix::make_float3(-19.13, -8.76, -8.20));
-	protrudingDist.push_back(optix::make_float3(0.0, 0.0, -0.01));
-	squareCors.push_back(tmpSquareCors);
-
-	//the front wall's parameters!
-	//the round window
-
-	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -2.2, -4.8));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, 2.2, -4.8));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -2.2, -0.3));
-	protrudingDist.push_back(optix::make_float3(3.0, 0.0, 0.0));
-	squareCors.push_back(tmpSquareCors);
-
-	//the left window
-	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.0, -6.2));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.0, -5));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -13.0, -6.2));
-	protrudingDist.push_back(optix::make_float3(-4.0, 0.0, 0.0));
-	squareCors.push_back(tmpSquareCors);
-
-	//the right window
-	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.0, 5));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.0, 5));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -13.0, 6.2));
-	protrudingDist.push_back(optix::make_float3(-4.0, 0.0, 0.0));
-	squareCors.push_back(tmpSquareCors);
-
-	//the over-door window
-	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.4, -1.6));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -9.4, 1.6));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, -11.5, -1.6));
-	protrudingDist.push_back(optix::make_float3(-2.1, 0.0, 0.0));
-	squareCors.push_back(tmpSquareCors);
-
-	//the top small round window
-	tmpSquareCors.clear();
-	tmpSquareCors.push_back(optix::make_float3(-21.0, 3.1, -1.0));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, 3.1, 1.0));
-	tmpSquareCors.push_back(optix::make_float3(-21.0, 1.3, -1.0));
-	protrudingDist.push_back(optix::make_float3(-1.8, 0.0, 0.0));
+	tmpSquareCors.push_back(optix::make_float3(-19.13, -14.00, -14.20));
+	tmpSquareCors.push_back(optix::make_float3(-6.00, -14.00, -14.20));
+	tmpSquareCors.push_back(optix::make_float3(-19.13, -8.76, -10.30));
 	squareCors.push_back(tmpSquareCors);
 
 	for (int i = 0; i < m_numLights; ++i) {
-		m_multiLights[i].power = 2*make_float3(0.5e6f, 0.4e6f, 0.2e6f);
+		m_multiLights[i].power = 5*make_float3(0.4e6f, 0.5e6f, 0.5e6f);
 		m_multiLights[i].is_area_light = 1;
-		createLightParameters(squareCors[i], protrudingDist[i], m_multiLights[i].v1, m_multiLights[i].v2, m_multiLights[i].anchor);
+		createLightParameters(squareCors[i], m_multiLights[i].v1, m_multiLights[i].v2, m_multiLights[i].anchor);
 		m_multiLights[i].direction = normalize(cross(m_multiLights[i].v1, m_multiLights[i].v2));
 		//Matrix4x4 Rot = Matrix4x4::rotate(0, m_multiLights[i].v1);
 		//m_multiLights[i].v1 = make_float3(Rot * make_float4(m_multiLights[i].v1, 1.0f));

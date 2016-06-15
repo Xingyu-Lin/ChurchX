@@ -58,8 +58,10 @@ Model::Model(std::string &objfilename,const optix::Material matl, AccelDescripto
 		GI = m_geom_group->getChild(0);
 		GI["diffuse_map_scale"]->setFloat(1.0f);
 		GI["emitted"]->setFloat(0.0f, 0.0f, 0.0f);
-		GI["Kd"]->setFloat(0.7, 0.7, 0.7);
-		GI["Ks"]->setFloat(1, 1, 1);
+		GI["Kd"]->setFloat(0.4, 0.4, 0.4);
+		if (objfilename == "pod") {
+			GI["Ks"]->setFloat(1.0, 1.0, 1.0);
+		}
 		GI["Ka"]->setFloat(0.5, 0.5, 0.5);
 		GI["grid_color"]->setFloat(0.5f, 0.5f, 0.5f);
 		optix::Buffer buff = GI["diffuse_map"]->getBuffer();

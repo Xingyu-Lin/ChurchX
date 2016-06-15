@@ -164,6 +164,11 @@ RT_PROGRAM void ppass_closest_hit()
     createONB(ffnormal, U, V, W);
     sampleUnitHemisphere(rnd_from_uint2(hit_record.sample), U, V, W, new_ray_dir);
 
+	/*if ( fmaxf(Ks) > 0.0f) {
+		new_ray_dir = reflect(ray.direction, ffnormal);
+		hit_record.energy = Ks * hit_record.energy;
+	}*/
+
   } else {
     hit_record.energy = Ks * hit_record.energy;
     // Make reflection ray
@@ -178,6 +183,10 @@ RT_PROGRAM void ppass_closest_hit()
   if ( hit_record.num_deposits >= max_photon_count || hit_record.ray_depth >= max_depth)
     return;
 
+  /*if (fmaxf(Ks) > 0.0f) {
+	  optix::Ray new_ray(hit_point, new_ray_dir, ppass_and_gather_ray_type, scene_epsilon);
+	  rtTrace(top_object, new_ray, hit_record);
+  }*/
   //optix::Ray new_ray( hit_point, new_ray_dir, ppass_and_gather_ray_type, scene_epsilon );
   //rtTrace(top_object, new_ray, hit_record);
 }
