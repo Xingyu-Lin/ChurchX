@@ -915,12 +915,15 @@ void ProgressivePhotonScene::loadObjGeometry()
 
 	std::string path4 = std::string(sutilSamplesPtxDir()) + "/progressivePhotonMap_generated_glass.cu.ptx";
 	Program closest_glass = m_context->createProgramFromPTXFile(path4, "ppass_closest_hit_transparent");
+	Program any_hit_glass = m_context->createProgramFromPTXFile(path4, "gather_any_hit_glass");
+	Program closest_hit_rt_glass = m_context->createProgramFromPTXFile(path4, "rtpass_closest_hit_glass");
+	
 	m_glass_material = m_context->createMaterial();
-	m_glass_material->setClosestHitProgram(rtpass_ray_type, closest_hit1);
+	m_glass_material->setClosestHitProgram(rtpass_ray_type, closest_hit_rt_glass);
 	m_glass_material->setClosestHitProgram(ppass_and_gather_ray_type, closest_glass);
-	m_glass_material->setAnyHitProgram(shadow_ray_type, any_hit);
+	m_glass_material->setAnyHitProgram(shadow_ray_type, any_hit_glass);
 
-	m_glass_material->setClosestHitProgram(radiance_in_participating_medium, closest_hit1);
+	m_glass_material->setClosestHitProgram(radiance_in_participating_medium, closest_hit_rt_glass);
 	m_glass_material->setClosestHitProgram(photon_in_participating_medium, closest_glass);
 
 	std::string path = std::string(sutilSamplesPtxDir()) + "/progressivePhotonMap_generated_triangle_mesh.cu.ptx";

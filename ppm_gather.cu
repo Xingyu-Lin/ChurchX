@@ -95,7 +95,7 @@ RT_PROGRAM void gather()
 
   // Check if this is hit point lies on an emitter or hit background 
   if( !(rec_flags & PPM_HIT) || rec_flags & PPM_OVERFLOW ) {
-    output_buffer[launch_index] = make_float4(rec_atten_Kd);
+	  output_buffer[launch_index] = make_float4(rec_atten_Kd + rec_volumetricRadiance / total_emitted);
     return;
   }
 
