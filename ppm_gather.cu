@@ -228,7 +228,7 @@ RT_PROGRAM void gather()
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
   rtpass_output_buffer[launch_index] = rec;
   //float3 final_color = indirect_flux;
-  float3 final_color = indirect_flux + direct_flux + rec_volumetricRadiance / total_emitted + ambient_light*rec_atten_Kd;
+  float3 final_color = direct_flux + indirect_flux + rec_volumetricRadiance / total_emitted + ambient_light*rec_atten_Kd;
   //float3 final_color = indirect_flux ;
 
   //if (fmaxf(rec_volumetricRadiance / total_emitted)>0.0f) final_color = make_float3(0.7f,0.0f,0.0f);

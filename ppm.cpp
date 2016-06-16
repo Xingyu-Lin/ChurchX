@@ -50,8 +50,11 @@ using namespace optix;
 #define NUM_VOLUMETRIC_PHOTONS 2000000
 
 // For demo
-static const bool sideWall = false;
+static const bool sideWall = true;
 static const bool golden = false;
+
+static const bool frontLightSkew = false;
+
 // Finds the smallest power of 2 greater or equal to x.
 inline unsigned int pow2roundup(unsigned int x)
 {
@@ -177,6 +180,8 @@ private:
 	Program       m_pgram_bounding_box;
 	Program       m_pgram_intersection;
 	Material      m_material;
+	Material      m_glass_material;
+
 	Buffer        m_display_buffer;
 	Buffer        m_photons;
 	Buffer        m_photon_map;
@@ -907,6 +912,17 @@ void ProgressivePhotonScene::loadObjGeometry()
 	m_material->setClosestHitProgram(radiance_in_participating_medium, closest_hit1);
 	m_material->setClosestHitProgram(photon_in_participating_medium, closest_hit2);
 
+
+	std::string path4 = std::string(sutilSamplesPtxDir()) + "/progressivePhotonMap_generated_glass.cu.ptx";
+	Program closest_glass = m_context->createProgramFromPTXFile(path4, "ppass_closest_hit_transparent");
+	m_glass_material = m_context->createMaterial();
+	m_glass_material->setClosestHitProgram(rtpass_ray_type, closest_hit1);
+	m_glass_material->setClosestHitProgram(ppass_and_gather_ray_type, closest_glass);
+	m_glass_material->setAnyHitProgram(shadow_ray_type, any_hit);
+
+	m_glass_material->setClosestHitProgram(radiance_in_participating_medium, closest_hit1);
+	m_glass_material->setClosestHitProgram(photon_in_participating_medium, closest_glass);
+
 	std::string path = std::string(sutilSamplesPtxDir()) + "/progressivePhotonMap_generated_triangle_mesh.cu.ptx";
 	Program mesh_intersect = m_context->createProgramFromPTXFile(path, "mesh_intersect");
 	Program mesh_bbox = m_context->createProgramFromPTXFile(path, "mesh_bounds");
@@ -928,8 +944,12 @@ void ProgressivePhotonScene::loadObjGeometry()
 		float rotateRadius = 0.0f;
 		optix::Transform trans = m_context->createTransform();
 		GeometryGroup tempGroup = m_context->createGeometryGroup();
-		church_parts[i] = Model(objFullPath, m_material, m_accel_desc, NULL, mesh_intersect, mesh_bbox, m_context,
+		if (m_church_parts_name[i] == "staklo")
+			church_parts[i] = Model(objFullPath, m_glass_material, m_accel_desc, NULL, mesh_intersect, mesh_bbox, m_context,
 								i ? church_parts.back().m_geom_group : static_cast<GeometryGroup>(NULL), translate, scale, rotateRadius, rotateAxis);
+		else
+			church_parts[i] = Model(objFullPath, m_material, m_accel_desc, NULL, mesh_intersect, mesh_bbox, m_context,
+			i ? church_parts.back().m_geom_group : static_cast<GeometryGroup>(NULL), translate, scale, rotateRadius, rotateAxis);
 	}
 
 	for (int i = 0; i<m_church_parts_name.size(); ++i)
@@ -972,14 +992,14 @@ void ProgressivePhotonScene::loadObjGeometry()
 		optix::GeometryGroup group = m_context->createGeometryGroup();
 		group->setChildCount(1);
 		group->setChild(0, gi);
-		optix::Acceleration a = m_context->createAcceleration("NoAccel", "NoAccel");
+		optix::Acceleration a = m_context->createAcceleration("Sbvh", "Bvh");
 		group->setAcceleration(a);
 
 		TopGroup->setChildCount(TopGroup->getChildCount() + 1);
 		TopGroup->setChild(TopGroup->getChildCount() - 1, group);
 	}
 
-	TopGroup->setAcceleration(m_context->createAcceleration("NoAccel", "NoAccel"));
+	TopGroup->setAcceleration(m_context->createAcceleration("Sbvh", "Bvh"));
 	m_context["top_object"]->set(TopGroup);
 	m_context["top_shadower"]->set(TopGroup);
 
@@ -1180,11 +1200,20 @@ void ProgressivePhotonScene::createLights() {
 	//front side wall light
 	if (!sideWall)
 	{
-		tmpSquareCors.clear();
-		tmpSquareCors.push_back(optix::make_float3(-32.3, -9.0, 6.3));
-		tmpSquareCors.push_back(optix::make_float3(-32.3, -9.0, -6.3));
-		tmpSquareCors.push_back(optix::make_float3(-20.2, 3.1, 6.2));
-		squareCors.push_back(tmpSquareCors);
+		if (frontLightSkew) {
+			tmpSquareCors.clear();
+			tmpSquareCors.push_back(optix::make_float3(-35.3, -9.0, 6.3));
+			tmpSquareCors.push_back(optix::make_float3(-39.3, -9.0, -6.3));
+			tmpSquareCors.push_back(optix::make_float3(-20.2, 8.1, 6.2));
+			squareCors.push_back(tmpSquareCors);
+		}
+		else {
+			tmpSquareCors.clear();
+			tmpSquareCors.push_back(optix::make_float3(-35.3, -9.0, 6.3));
+			tmpSquareCors.push_back(optix::make_float3(-35.3, -9.0, -6.3));
+			tmpSquareCors.push_back(optix::make_float3(-20.2, 8.1, 6.2));
+			squareCors.push_back(tmpSquareCors);
+		}
 	}
 	/*tmpSquareCors.clear();
 	tmpSquareCors.push_back(optix::make_float3(-24.3, -4.1, 6.3));
@@ -1201,11 +1230,18 @@ void ProgressivePhotonScene::createLights() {
 		tmpSquareCors.push_back(optix::make_float3(-19.13, -8.76, -10.30));
 		squareCors.push_back(tmpSquareCors);
 	}
+	
+	float lightPowerScale;
+	if (sideWall)
+		lightPowerScale = 5.0;
+	else
+		lightPowerScale = 8.0;
+
 	for (int i = 0; i < m_numLights; ++i) {
 		if (!golden)
-			m_multiLights[i].power = 5*make_float3(0.4e6f, 0.5e6f, 0.5e6f);
+			m_multiLights[i].power = lightPowerScale * make_float3(0.4e6f, 0.5e6f, 0.5e6f);
 		else
-			m_multiLights[i].power = 5 * make_float3(0.6e6f, 0.4e6f, 0.2e6f);
+			m_multiLights[i].power = lightPowerScale * make_float3(0.6e6f, 0.4e6f, 0.2e6f);
 		m_multiLights[i].is_area_light = 1;
 		createLightParameters(squareCors[i], m_multiLights[i].v1, m_multiLights[i].v2, m_multiLights[i].anchor);
 		m_multiLights[i].direction = normalize(cross(m_multiLights[i].v1, m_multiLights[i].v2));

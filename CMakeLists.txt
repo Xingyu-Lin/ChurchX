@@ -35,9 +35,10 @@ if(GLUT_FOUND AND OPENGL_FOUND)
     ppm_rtpass.cu
     ppm_ppass.cu
     ppm_gather.cu
-          VolumetricPhotonInitialize.cu
-          VolumetricPhotonSphere.cu
-          VolumetricPhotonSphereRadiance.cu
+    VolumetricPhotonInitialize.cu
+    VolumetricPhotonSphere.cu
+    VolumetricPhotonSphereRadiance.cu
+	glass.cu
     # These files are common among multiple samples
     helpers.h
     parallelogram.cu
