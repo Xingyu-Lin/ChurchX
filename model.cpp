@@ -57,9 +57,9 @@ Model::Model(std::string &objfilename,const optix::Material matl, AccelDescripto
 
 		GI = m_geom_group->getChild(0);
 		GI["diffuse_map_scale"]->setFloat(1.0f);
-		if (objfilename == "pod")
-			GI["emitted"]->setFloat(0.1f, 0.0f, 0.0f);
-		GI["Kd"]->setFloat(0.4, 0.4, 0.4);
+		//if (objfilename == "pod")
+		//	GI["emitted"]->setFloat(0.0f, 0.0f, 0.0f);
+		GI["Kd"]->setFloat(0.1, 0.1, 0.1);
 		if (objfilename == "pod") {
 			GI["Ks"]->setFloat(1.0, 1.0, 1.0);
 		}

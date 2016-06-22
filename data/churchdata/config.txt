@@ -7,8 +7,8 @@ pod_rub
 kamen_zid_prozor
 zid_vani
 kamen_zid_parapet
-staklo_crveno
 rozeta
 staklo_zeleno
 staklo_plavo
 staklo_zuto
+staklo_crveno

@@ -189,5 +189,6 @@ RT_PROGRAM void ppass_closest_hit()
   }*/
   //optix::Ray new_ray( hit_point, new_ray_dir, ppass_and_gather_ray_type, scene_epsilon );
   //rtTrace(top_object, new_ray, hit_record);
+
 }
 

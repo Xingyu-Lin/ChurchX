@@ -50,7 +50,7 @@ using namespace optix;
 #define NUM_VOLUMETRIC_PHOTONS 2000000
 
 // For demo
-static const bool sideWall = true;
+static const bool sideWall = false;
 static const bool golden = false;
 
 static const bool frontLightSkew = false;
@@ -917,14 +917,21 @@ void ProgressivePhotonScene::loadObjGeometry()
 	Program closest_glass = m_context->createProgramFromPTXFile(path4, "ppass_closest_hit_transparent");
 	Program any_hit_glass = m_context->createProgramFromPTXFile(path4, "gather_any_hit_glass");
 	Program closest_hit_rt_glass = m_context->createProgramFromPTXFile(path4, "rtpass_closest_hit_glass");
-	
+
+	Program any_hit_glass_rt = m_context->createProgramFromPTXFile(path4, "any_hit_glass_rt");
+	Program any_hit_glass_ph = m_context->createProgramFromPTXFile(path4, "any_hit_glass_ph");
+
 	m_glass_material = m_context->createMaterial();
 	m_glass_material->setClosestHitProgram(rtpass_ray_type, closest_hit_rt_glass);
 	m_glass_material->setClosestHitProgram(ppass_and_gather_ray_type, closest_glass);
+	m_glass_material->setAnyHitProgram(rtpass_ray_type, any_hit_glass_rt);
+	m_glass_material->setAnyHitProgram(ppass_and_gather_ray_type, any_hit_glass_ph);
 	m_glass_material->setAnyHitProgram(shadow_ray_type, any_hit_glass);
 
 	m_glass_material->setClosestHitProgram(radiance_in_participating_medium, closest_hit_rt_glass);
 	m_glass_material->setClosestHitProgram(photon_in_participating_medium, closest_glass);
+	m_glass_material->setAnyHitProgram(radiance_in_participating_medium, any_hit_glass_rt);
+	m_glass_material->setAnyHitProgram(photon_in_participating_medium, any_hit_glass_ph);
 
 	std::string path = std::string(sutilSamplesPtxDir()) + "/progressivePhotonMap_generated_triangle_mesh.cu.ptx";
 	Program mesh_intersect = m_context->createProgramFromPTXFile(path, "mesh_intersect");
@@ -947,7 +954,12 @@ void ProgressivePhotonScene::loadObjGeometry()
 		float rotateRadius = 0.0f;
 		optix::Transform trans = m_context->createTransform();
 		GeometryGroup tempGroup = m_context->createGeometryGroup();
-		if (m_church_parts_name[i] == "staklo")
+		if (m_church_parts_name[i] == "staklo_zeleno" ||
+			m_church_parts_name[i] == "staklo_plavo" ||
+			m_church_parts_name[i] == "staklo_zuto" ||
+			m_church_parts_name[i] == "staklo_crveno"
+			//|| m_church_parts_name[i] == "staklo"
+			)
 			church_parts[i] = Model(objFullPath, m_glass_material, m_accel_desc, NULL, mesh_intersect, mesh_bbox, m_context,
 								i ? church_parts.back().m_geom_group : static_cast<GeometryGroup>(NULL), translate, scale, rotateRadius, rotateAxis);
 		else
