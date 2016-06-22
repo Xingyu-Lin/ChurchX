@@ -78,6 +78,8 @@ static __device__ __inline__ float3 exp( const float3& x )
 	return make_float3(exp(x.x), exp(x.y), exp(x.z));
 }
 
+rtTextureSampler<float4, 2> envmap;
+
 RT_PROGRAM void rtpass_closest_hit_glass()
 {
 	float refraction_index = 1.4f;
@@ -99,47 +101,23 @@ RT_PROGRAM void rtpass_closest_hit_glass()
 
 	if( fmaxf( Kd ) > 0.0f )
 	{
-		HitRecord rec = rtpass_output_buffer[launch_index];;
-		float reflection = 1.0f;
-		float3 result = make_float3(0.0f);
+		float theta = atan2f( ray.direction.x, ray.direction.z );
+		float phi   = M_PIf * 0.5f -  acosf( ray.direction.y );
+		float u     = (theta + M_PIf) * (0.5f * M_1_PIf);
+		float v     = 0.5f * ( 1.0f + sin(phi) );
+		float3 result = make_float3(tex2D(envmap, u, v));
 
-		float3 beer_attenuation;
-		if(dot(world_shading_normal, ray.direction) > 0){
-			// Beer's law attenuation
-			beer_attenuation = exp(extinction_constant * 0.01);
-		} else {
-			beer_attenuation = exp(extinction_constant * 0.01);
-		}
-
-		float3 t;                                                            // transmission direction
-		if ( refract(t, direction, world_shading_normal, refraction_index) )
-		{
-			// check for external or internal reflection
-			float cos_theta = dot(direction, world_shading_normal);
-			if (cos_theta < 0.0f)
-				cos_theta = -cos_theta;
-			else
-				cos_theta = dot(t, world_shading_normal);
-
-			reflection = fresnel_schlick(cos_theta, fresnel_exponent, fresnel_minimum, fresnel_maximum);
-
-			optix::Ray ray(hit_point, t, radiance_in_participating_medium, scene_epsilon);
-			HitPRD refr_prd;
-			refr_prd.ray_depth = hit_prd.ray_depth + 1;
-			refr_prd.attenuation = hit_prd.attenuation;
-
-			rtTrace(top_object, ray, refr_prd);
-			result += (1.0f - reflection) * refraction_color * refr_prd.attenuation;
-		}
-
+		HitRecord rec = rtpass_output_buffer[launch_index];
 		// We hit a diffuse surface; record hit and return
 		rec.position = hit_point;
 		rec.normal = ffnormal;
-		rec.attenuated_Kd = (Kd + result) * hit_prd.attenuation;
+		rec.attenuated_Kd = Kd * hit_prd.attenuation;
 
 		rec.flags = PPM_HIT;
 		rec.attenuated_Kd *= make_float3(
-				tex2D(diffuse_map, texcoord.x * diffuse_map_scale, texcoord.y * diffuse_map_scale));
+				tex2D(diffuse_map, texcoord.x * diffuse_map_scale, texcoord.y * diffuse_map_scale)) * 100;
+		rec.attenuated_Kd += result*2;
+		//rtPrintf("%f %f %f\n", result.x, result.y, result.z);
 		//rtPrintf("%f %f %f\n", rec.attenuated_Kd.x, rec.attenuated_Kd.y, rec.attenuated_Kd.z);
 		rtpass_output_buffer[launch_index] = rec;
 	}

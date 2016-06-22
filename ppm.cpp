@@ -51,7 +51,7 @@ using namespace optix;
 
 // For demo
 static const bool sideWall = false;
-static const bool golden = false;
+static const bool golden = true;
 
 static const bool frontLightSkew = false;
 
@@ -432,8 +432,8 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 										make_float3(0, 1, 0),     // up
 										45.0f);                              // vfov
 		else
-		camera_data = InitialCameraData(make_float3(214.823, -103.356, 73.8156), // eye
-										make_float3(-514.297, -213.848, -134.995),      // lookat
+		camera_data = InitialCameraData(make_float3(20.3284, -218.322, 57.4527), // eye
+										make_float3(-646.766, -128.221, -309.008),      // lookat
 										make_float3(0, 1, 0),     // up
 										55.0f);
 		bool useWindowLight = true;
