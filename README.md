@@ -2,6 +2,7 @@
 ChurchX is a Computer Graphics Course Project for rendering a real-life church scene based on progressive photon mapping with scatter participating medium. We focus on rendering the light beam in the church, which is one of the most impressive characteristic of a church. Here we utilize NVIDIA's OptiX ray tracing engine.
 
 > And God said, Let there be light: and there was light.
+
 > And God saw the light, and it was good; and God divided the light from the darkness.
 
 ## Building Instructions
@@ -24,7 +25,7 @@ Visual Studio 2008, 2010, 2012, or 2013 is required on Windows systems. gcc 4.4-
 #### GLUT:
 Most OptiX samples use the GLUT toolkit. Freeglut ships with the Windows OptiX distribution. GLUT is installed by default on Mac OSX. A GLUT installation is required to build samples on Linux.
 
-### Building Tutorial for windows
+### Building Tutorial for Windows
 1. Move the ChurchX folder under the directory where you installed the OptiX.
     For example
     `F:\NVIDIA Corporation\OptiX SDK 3.9.0\ChurchX`
@@ -57,3 +58,13 @@ static const bool loadAllWindows = true;
 4. When `sideWall` is set to be false, use `frontLightSkew` to make the light skew.
 5. If `sideWall` is set to be true, make sure `loadAllWindows` is set to be false.
 6. If `sideWall` is set to be false, setting `loadAllWindows` to be true will make the beam more colorful visually.
+
+## Demo
+Left Side Blue Light
+![Left Side Blue Light](https://raw.githubusercontent.com/DoraXingyu/ChurchX_new/master/demo/sample1.png)
+Left Side Golden Light
+![Left Side Golden Light](https://raw.githubusercontent.com/DoraXingyu/ChurchX_new/master/demo/sample2.png)
+Front side skew golden light without colorful glass
+![Front side skew golden light without colorful glass](https://raw.githubusercontent.com/DoraXingyu/ChurchX_new/master/demo/sample3.png)
+Front side golden light with colorful glass(set `loadAllWindows` true)
+![Front side golden light with colorful glass](https://raw.githubusercontent.com/DoraXingyu/ChurchX_new/master/demo/sample102.png)
