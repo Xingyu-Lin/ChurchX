@@ -41,7 +41,11 @@ Most OptiX samples use the GLUT toolkit. Freeglut ships with the Windows OptiX d
 10. Run
 
 ### Building Tutorial for Linux/MacOS
-TODO
+1. cd into the main folder and "makedir build"
+2. cd ./build
+3. cmake ../
+4. make
+Note: configure the OptiX, OptiX_primary include directory and library directory in the cmake cache if necessary.
 
 ## Running Instructions
 ### How to Tweak the Scene
