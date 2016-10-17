@@ -66,7 +66,7 @@ RT_PROGRAM void gather_any_hit_glass()
 }
 
 rtDeclareVariable(HitPRD, hit_prd, rtPayload, );
-rtBuffer<HitRecord, 2>           rtpass_output_buffer;
+rtBuffer<HitRecord, 3>           rtpass_output_buffer;
 
 rtTextureSampler<float4, 2>      diffuse_map;
 rtDeclareVariable(float, diffuse_map_scale, , );
@@ -107,7 +107,7 @@ RT_PROGRAM void rtpass_closest_hit_glass()
 		float v     = 0.5f * ( 1.0f + sin(phi) );
 		float3 result = make_float3(tex2D(envmap, u, v));
 
-		HitRecord rec = rtpass_output_buffer[launch_index];
+		HitRecord rec = rtpass_output_buffer[make_uint3(launch_index.x,launch_index.y,0)];
 		// We hit a diffuse surface; record hit and return
 		rec.position = hit_point;
 		rec.normal = ffnormal;
@@ -119,7 +119,7 @@ RT_PROGRAM void rtpass_closest_hit_glass()
 		rec.attenuated_Kd += result*2;
 		//rtPrintf("%f %f %f\n", result.x, result.y, result.z);
 		//rtPrintf("%f %f %f\n", rec.attenuated_Kd.x, rec.attenuated_Kd.y, rec.attenuated_Kd.z);
-		rtpass_output_buffer[launch_index] = rec;
+		rtpass_output_buffer[make_uint3(launch_index.x,launch_index.y,0)] = rec;
 	}
 	hit_prd.lastTHit = tHitStack;
 }

@@ -36,7 +36,7 @@ rtDeclareVariable(rtObject,      top_object, , );
 rtBuffer<float4, 2>              output_buffer;
 rtBuffer<float4, 2>              debug_buffer;
 rtBuffer<PackedPhotonRecord, 1>  photon_map;
-rtBuffer<PackedHitRecord, 2>     rtpass_output_buffer;
+rtBuffer<PackedHitRecord, 3>     rtpass_output_buffer;
 rtBuffer<uint2, 2>               image_rnd_seeds;
 rtDeclareVariable(float,         scene_epsilon, , );
 rtDeclareVariable(float,         alpha, , );
@@ -82,7 +82,7 @@ void accumulatePhoton( const PackedPhotonRecord& photon,
 RT_PROGRAM void gather()
 {
   clock_t start = clock();
-  PackedHitRecord rec = rtpass_output_buffer[launch_index];
+  PackedHitRecord rec = rtpass_output_buffer[make_uint3(launch_index.x,launch_index.y,0)];
   float3 rec_position = make_float3( rec.a.x, rec.a.y, rec.a.z );
   float3 rec_normal   = make_float3( rec.a.w, rec.b.x, rec.b.y );
   float3 rec_atten_Kd = make_float3( rec.b.z, rec.b.w, rec.c.x );
@@ -226,7 +226,7 @@ RT_PROGRAM void gather()
 
   //rec_atten_Kd += make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
-  rtpass_output_buffer[launch_index] = rec;
+  rtpass_output_buffer[make_uint3(launch_index.x,launch_index.y,0)] = rec;
   //float3 final_color = indirect_flux;
   float3 final_color = direct_flux + indirect_flux + rec_volumetricRadiance / total_emitted + ambient_light*rec_atten_Kd;
   //float3 final_color = indirect_flux ;

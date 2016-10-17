@@ -36,7 +36,7 @@ rtDeclareVariable(rtObject,      top_object, , );
 //
 // Ray generation program
 //
-rtBuffer<HitRecord, 2>           rtpass_output_buffer;
+rtBuffer<HitRecord, 3>           rtpass_output_buffer;
 rtBuffer<uint2, 2>               image_rnd_seeds;
 rtDeclareVariable(float,         rtpass_default_radius2, , );
 rtDeclareVariable(float3,        rtpass_eye, , );
@@ -47,7 +47,7 @@ rtDeclareVariable(uint2,      launch_index, rtLaunchIndex, );
 
 RT_PROGRAM void rtpass_camera()
 {
-  float2 screen = make_float2( rtpass_output_buffer.size() );
+  float2 screen = make_float2( rtpass_output_buffer.size().x, rtpass_output_buffer.size().y);
   /*
   uint   seed   = image_rnd_seeds[index];                       // If we start writing into this buffer here we will
   float2 sample = make_float2( rnd(seed.x), rnd(seed.y) );      // need to make it an INPUT_OUTPUT buffer.  For now it
@@ -67,7 +67,7 @@ RT_PROGRAM void rtpass_camera()
   prd.ray_depth   = 0u;
   prd.volumetricRadiance = make_float3(0.0f);
   rtTrace( top_object, ray, prd );
-  rtpass_output_buffer[launch_index].volumetricRadiance += prd.volumetricRadiance;
+  rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)].volumetricRadiance += prd.volumetricRadiance;
 
 }
 
@@ -96,7 +96,7 @@ RT_PROGRAM void rtpass_closest_hit()
 {
   // Check if this is a light source
   if( fmaxf( emitted ) > 0.0f ) {
-    HitRecord& rec = rtpass_output_buffer[ launch_index ];
+    HitRecord& rec = rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)];
     rec.attenuated_Kd = emitted*hit_prd.attenuation; 
     rec.flags = 0u;
     return;
@@ -111,7 +111,7 @@ RT_PROGRAM void rtpass_closest_hit()
   double tHitStack = t_hit + 0.1 - 0.1; // Important, prevents compiler optimization on variable
   if( fmaxf( Kd ) > 0.0f ) {
     // We hit a diffuse surface; record hit and return
-    HitRecord rec = rtpass_output_buffer[ launch_index ];;
+    HitRecord rec = rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)];
     rec.position = hit_point; 
     rec.normal = ffnormal;
     if( !use_grid ) {
@@ -131,7 +131,7 @@ RT_PROGRAM void rtpass_closest_hit()
     rec.flags = PPM_HIT;
 	rec.attenuated_Kd *= make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
     //rtPrintf("%f %f %f\n", rec.attenuated_Kd.x, rec.attenuated_Kd.y, rec.attenuated_Kd.z);
-    rtpass_output_buffer[launch_index] = rec;
+    rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)] = rec;
   } else {
     // Make reflection ray
     hit_prd.attenuation = hit_prd.attenuation * Ks;
@@ -155,7 +155,7 @@ RT_PROGRAM void rtpass_miss()
   float v     = 0.5f * ( 1.0f + sin(phi) );
   float3 result = make_float3(tex2D(envmap, u, v));
 
-  HitRecord& rec = rtpass_output_buffer[launch_index];
+  HitRecord& rec = rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)];
   rec.flags = 0u;
   rec.attenuated_Kd = hit_prd.attenuation * result;
 }
@@ -166,7 +166,7 @@ RT_PROGRAM void rtpass_miss()
 {
   HitPRD& prd = hit_prd.reference();
   uint2 index = make_uint2( launch_index.get() );
-  HitRecord& rec = rtpass_output_buffer[index];
+  HitRecord& rec = rtpass_output_buffer[index][0];
 
   rec.flags = 0u;
   rec.attenuated_Kd = prd.attenuation * rtpass_bg_color;
@@ -179,7 +179,7 @@ RT_PROGRAM void rtpass_miss()
 rtDeclareVariable(float3, rtpass_bad_color, , );
 RT_PROGRAM void rtpass_exception()
 {
-  HitRecord& rec = rtpass_output_buffer[launch_index];
+  HitRecord& rec = rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)];
 
   rec.flags = PPM_OVERFLOW;
   rec.attenuated_Kd = rtpass_bad_color;

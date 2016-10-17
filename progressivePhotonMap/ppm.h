@@ -31,6 +31,7 @@
 #define  PPM_OVERFLOW  ( 1 << 6 )
 #define  PPM_HIT       ( 1 << 7 )
 
+#define  FRAME (24)
 enum RayTypes
 {
     rtpass_ray_type,
