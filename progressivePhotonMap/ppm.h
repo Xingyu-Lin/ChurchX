@@ -93,6 +93,7 @@ struct HitPRD
     optix::uint   ray_depth;
     optix::float3 volumetricRadiance;
     float lastTHit;
+
 };
 
 

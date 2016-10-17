@@ -34,6 +34,7 @@ using namespace optix;
 
 rtDeclareVariable(rtObject,      top_object, , );
 rtBuffer<float4, 2>              output_buffer;
+rtBuffer<float4, 3>              frame_output_buffer;
 rtBuffer<float4, 2>              debug_buffer;
 rtBuffer<PackedPhotonRecord, 1>  photon_map;
 rtBuffer<PackedHitRecord, 3>     rtpass_output_buffer;
@@ -96,6 +97,8 @@ RT_PROGRAM void gather()
   // Check if this is hit point lies on an emitter or hit background 
   if( !(rec_flags & PPM_HIT) || rec_flags & PPM_OVERFLOW ) {
 	  output_buffer[launch_index] = make_float4(rec_atten_Kd + rec_volumetricRadiance / total_emitted);
+      for (int i=0; i<FRAME; ++i)
+        frame_output_buffer[make_uint3(launch_index, i)] = make_float4(rec_atten_Kd + rec_volumetricRadiance / total_emitted);
     return;
   }
 
@@ -240,6 +243,8 @@ RT_PROGRAM void gather()
   //if (tmp.x>0)
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,tmp.x, tmp.y, tmp.z);
   output_buffer[launch_index] = make_float4(final_color);
+  for (int i=0; i<FRAME; ++i)
+    frame_output_buffer[make_uint3(launch_index, i)] = make_float4(final_color);
   if(use_debug_buffer == 1)
     debug_buffer[launch_index] = make_float4( loop_iter, new_R2, new_N, M );
 }

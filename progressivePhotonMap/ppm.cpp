@@ -48,7 +48,7 @@
 using namespace optix;
 using namespace std;
 
-#define NUM_VOLUMETRIC_PHOTONS 2000000
+#define NUM_VOLUMETRIC_PHOTONS 1000000
 
 // For demo
 static const bool golden = true;
@@ -183,6 +183,7 @@ private:
 	Material      m_material;
 	Material      m_glass_material;
 
+	Buffer		  m_frame_buffer;
 	Buffer        m_display_buffer;
 	Buffer        m_photons;
 	Buffer        m_photon_map;
@@ -291,6 +292,12 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 	m_context["total_emitted"]->setFloat(0.0f);
 	m_context["frame_number"]->setFloat(0.0f);
 	m_context["use_debug_buffer"]->setUint(m_display_debug_buffer ? 1 : 0);
+
+	// Frame buffer
+	m_frame_buffer = m_context->createBuffer(RT_BUFFER_OUTPUT);
+	m_frame_buffer->setFormat(RT_FORMAT_FLOAT4);
+	m_frame_buffer->setSize(WIDTH, HEIGHT, FRAME);
+	m_context["frame_output_buffer"]->set(m_frame_buffer);
 
 	// Display buffer
 	m_display_buffer = createOutputBuffer(RT_FORMAT_FLOAT4, WIDTH, HEIGHT);
@@ -714,6 +721,7 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 			debug_buffer[i].position.z << std::endl;
 		m_volumetricPhotonsBuffer->unmap();
 	}
+	printf("Shoot photons start!\n");
 	// Trace photons
 	if (m_print_timings) std::cerr << "Starting photon pass   ... ";
 	Buffer photon_rnd_seeds = m_context["photon_rnd_seeds"]->getBuffer();
@@ -756,7 +764,7 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 		sutilCurrentTime(&t1);
 		if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
 	}
-
+	printf("Gather phase start!\n");
 	// Shade view rays by gathering photons
 	if (m_print_timings) std::cerr << "Starting gather pass   ... ";
 	sutilCurrentTime(&t0);
