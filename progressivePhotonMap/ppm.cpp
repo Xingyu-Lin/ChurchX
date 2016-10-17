@@ -48,7 +48,7 @@
 using namespace optix;
 using namespace std;
 
-#define NUM_VOLUMETRIC_PHOTONS 1000000
+
 
 // For demo
 static const bool golden = true;

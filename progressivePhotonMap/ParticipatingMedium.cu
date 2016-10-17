@@ -163,7 +163,7 @@ RT_PROGRAM void closestHitPhoton()
 
         //if(photonPrd.numStoredPhotons < maxPhotonDepositsPerEmitted)
         {
-            int volumetricPhotonIdx = photonPrd.pm_index % 2000000;
+            int volumetricPhotonIdx = photonPrd.pm_index % NUM_VOLUMETRIC_PHOTONS;
             volumetricPhotons[volumetricPhotonIdx].power = photonPrd.energy;
             volumetricPhotons[volumetricPhotonIdx].position = scatterPosition;
             atomicAdd(&volumetricPhotons[volumetricPhotonIdx].numDeposits, 1);

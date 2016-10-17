@@ -21,6 +21,8 @@
 
 #include <optixu/optixu_math_namespace.h>
 
+#define NUM_VOLUMETRIC_PHOTONS 20000
+
 #define  PPM_X         ( 1 << 0 )
 #define  PPM_Y         ( 1 << 1 )
 #define  PPM_Z         ( 1 << 2 )
@@ -31,7 +33,7 @@
 #define  PPM_OVERFLOW  ( 1 << 6 )
 #define  PPM_HIT       ( 1 << 7 )
 
-#define  FRAME (24)
+#define  FRAME (20)
 enum RayTypes
 {
     rtpass_ray_type,
