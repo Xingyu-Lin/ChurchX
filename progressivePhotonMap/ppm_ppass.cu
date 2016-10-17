@@ -123,6 +123,7 @@ RT_PROGRAM void ppass_camera()
   prd.pm_index = pm_index;
   prd.num_deposits = 0;
   prd.ray_depth = 0;
+  prd.dist =0;
   rtTrace( top_object, ray, prd );
 }
 
@@ -146,6 +147,7 @@ RT_PROGRAM void ppass_closest_hit()
   float3 ffnormal     = faceforward( world_shading_normal, -ray.direction, world_geometric_normal );
 
   float3 hit_point = ray.origin + t_hit*ray.direction;
+  hit_record.dist+=t_hit;
   float3 new_ray_dir;
 
   if( fmaxf( Kd ) > 0.0f ) {
@@ -156,6 +158,7 @@ RT_PROGRAM void ppass_closest_hit()
       rec.normal = ffnormal;
       rec.ray_dir = ray.direction;
       rec.energy = hit_record.energy;
+      rec.dist = hit_record.dist;
       hit_record.num_deposits++;
     }
 
@@ -183,6 +186,7 @@ RT_PROGRAM void ppass_closest_hit()
   if ( hit_record.num_deposits >= max_photon_count || hit_record.ray_depth >= max_depth)
     return;
 
+  //TODO: XINGYU, add photon reflection, pay attention to the hit_record.dist
   /*if (fmaxf(Ks) > 0.0f) {
 	  optix::Ray new_ray(hit_point, new_ray_dir, ppass_and_gather_ray_type, scene_epsilon);
 	  rtTrace(top_object, new_ray, hit_record);

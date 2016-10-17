@@ -313,7 +313,7 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 	Buffer output_buffer = m_context->createBuffer(RT_BUFFER_OUTPUT);
 	output_buffer->setFormat(RT_FORMAT_USER);
 	output_buffer->setElementSize(sizeof(HitRecord));
-	output_buffer->setSize(WIDTH, HEIGHT, FRAME+1);
+	output_buffer->setSize(WIDTH, HEIGHT);
 	m_context["rtpass_output_buffer"]->set(output_buffer);
 
 	// RTPass pixel sample buffers
@@ -838,7 +838,7 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 void ProgressivePhotonScene::doResize(unsigned int width, unsigned int height)
 {
 	// display buffer resizing handled in base class
-	m_context["rtpass_output_buffer"]->getBuffer()->setSize(width, height, FRAME+1);
+	m_context["rtpass_output_buffer"]->getBuffer()->setSize(width, height);
 	m_context["output_buffer"]->getBuffer()->setSize(width, height);
 	m_context["image_rnd_seeds"]->getBuffer()->setSize(width, height);
 	m_context["debug_buffer"]->getBuffer()->setSize(width, height);

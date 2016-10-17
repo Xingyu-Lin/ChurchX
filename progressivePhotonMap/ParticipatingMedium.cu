@@ -53,7 +53,8 @@ RT_PROGRAM void closestHitRadiance()
         volRadiancePrd.numHits = 0;
         volRadiancePrd.sigma_t = sigma_t;
         volRadiancePrd.sigma_s = sigma_s;
-
+        for (int i=0; i<FRAME; ++i)
+            volRadiancePrd.radiance[i]=0;
         float3 tmpdirection = ray.direction;
         // Get volumetric radiance
         Ray ray(hitPoint, tmpdirection, volumetric_radiance, 0.0000001, distance);
@@ -62,11 +63,13 @@ RT_PROGRAM void closestHitRadiance()
 
         // Multiply existing volumetric transmittance with current transmittance, and add gathered volumetric radiance
         // from this path
-        float3 tmp = hitPrd.volumetricRadiance;
-        hitPrd.volumetricRadiance *= transmittance;
-        hitPrd.volumetricRadiance += attenSaved*volRadiancePrd.radiance;
-        hitPrd.attenuation *= transmittance;
-
+        // TODO: XINGYU, Can be optimized here by adding a lazy tag
+        for (int i=0; i<FRAME; ++i)
+        {
+            hitPrd.volumetricRadiance[i] *= transmittance;
+            hitPrd.volumetricRadiance[i] += attenSaved * volRadiancePrd.radiance[i];
+            hitPrd.attenuation *= transmittance;
+        }
         //rtPrintf("%f\n", volRadiancePrd.radiance.x);
         //if (volRadiancePrd.numHits>0) rtPrintf("%f %f %f %d \n", distance , transmittance, hitPrd.volumetricRadiance.x, volRadiancePrd.numHits);
     }
@@ -116,6 +119,7 @@ RT_PROGRAM void closestHitPhoton()
     //rtPrintf("Hello1\n");
     const float sigma_t = sigma_a + sigma_s;
     photonPrd.ray_depth++;
+    photonPrd.dist+=tHit;
 
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
@@ -166,6 +170,7 @@ RT_PROGRAM void closestHitPhoton()
             int volumetricPhotonIdx = photonPrd.pm_index % NUM_VOLUMETRIC_PHOTONS;
             volumetricPhotons[volumetricPhotonIdx].power = photonPrd.energy;
             volumetricPhotons[volumetricPhotonIdx].position = scatterPosition;
+            volumetricPhotons[volumetricPhotonIdx].dist = photonPrd.dist;
             atomicAdd(&volumetricPhotons[volumetricPhotonIdx].numDeposits, 1);
             //rtPrintf("energy: %f, storeID: %d\n",photonPrd.energy.x, volumetricPhotonIdx);
 			//rtPrintf("%f %f %f : %f\n", scatterPosition.x, scatterPosition.y, scatterPosition.z, scatterLocationT);

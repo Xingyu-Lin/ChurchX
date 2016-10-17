@@ -36,7 +36,7 @@ rtDeclareVariable(rtObject,      top_object, , );
 //
 // Ray generation program
 //
-rtBuffer<HitRecord, 3>           rtpass_output_buffer;
+rtBuffer<HitRecord, 2>           rtpass_output_buffer;
 rtBuffer<uint2, 2>               image_rnd_seeds;
 rtDeclareVariable(float,         rtpass_default_radius2, , );
 rtDeclareVariable(float3,        rtpass_eye, , );
@@ -65,10 +65,12 @@ RT_PROGRAM void rtpass_camera()
   // rec.ray_dir = ray_direction; // set in rtpass_closest_hit
   prd.attenuation = make_float3( 1.0f );
   prd.ray_depth   = 0u;
-  prd.volumetricRadiance = make_float3(0.0f);
+  for (int i=0; i<FRAME; ++i)
+    prd.volumetricRadiance[i]=make_float3(0.0f);
   rtTrace( top_object, ray, prd );
-  rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)].volumetricRadiance += prd.volumetricRadiance;
-
+  // Each one of the output buffer is the sum of all the prefix cells
+  for (int i=1; i<FRAME; ++i)
+    rtpass_output_buffer[launch_index] = rtpass_output_buffer[make_uint3(launch_index, i-1)] + prd.volumetricRadiance[i];
 }
 
 // 
@@ -155,7 +157,7 @@ RT_PROGRAM void rtpass_miss()
   float v     = 0.5f * ( 1.0f + sin(phi) );
   float3 result = make_float3(tex2D(envmap, u, v));
 
-  HitRecord& rec = rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)];
+  HitRecord& rec = rtpass_output_buffer[launch_index];
   rec.flags = 0u;
   rec.attenuated_Kd = hit_prd.attenuation * result;
 }
@@ -179,7 +181,7 @@ RT_PROGRAM void rtpass_miss()
 rtDeclareVariable(float3, rtpass_bad_color, , );
 RT_PROGRAM void rtpass_exception()
 {
-  HitRecord& rec = rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)];
+  HitRecord& rec = rtpass_output_buffer[launch_index];
 
   rec.flags = PPM_OVERFLOW;
   rec.attenuated_Kd = rtpass_bad_color;

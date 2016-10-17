@@ -5,7 +5,7 @@
 
 using namespace optix;
 
-rtBuffer<HitRecord, 3>           rtpass_output_buffer;
+rtBuffer<HitRecord, 2>           rtpass_output_buffer;
 rtDeclareVariable(float,         rtpass_default_radius2, , );
 
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
@@ -21,6 +21,7 @@ RT_PROGRAM void kernel()
     rec.accum_atten = 0.0f;
     rec.flux = make_float3(0.0f, 0.0f, 0.0f);
     rec.accum_atten = 0.0f;
-    rec.volumetricRadiance = make_float3(0.0f);
-    rtpass_output_buffer[make_uint3(launchIndex.x, launchIndex.y,0)] = rec;
+    for (int i=0; i<FRAME; ++i)
+        rec.volumetricRadiance[i] = make_float3(0.0f);
+    rtpass_output_buffer[launchIndex] = rec;
 }

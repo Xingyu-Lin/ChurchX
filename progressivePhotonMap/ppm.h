@@ -22,7 +22,8 @@
 #include <optixu/optixu_math_namespace.h>
 
 #define NUM_VOLUMETRIC_PHOTONS 20000
-
+#define TOTAL_DISTANCE 1000000
+#define  FRAME 20
 #define  PPM_X         ( 1 << 0 )
 #define  PPM_Y         ( 1 << 1 )
 #define  PPM_Z         ( 1 << 2 )
@@ -33,7 +34,7 @@
 #define  PPM_OVERFLOW  ( 1 << 6 )
 #define  PPM_HIT       ( 1 << 7 )
 
-#define  FRAME (20)
+
 enum RayTypes
 {
     rtpass_ray_type,
@@ -74,7 +75,7 @@ struct HitRecord
   float         photon_count;     // Client TODO: should be moved clientside?
   optix::float3 flux;             //
   float         accum_atten;
-  optix::float3 volumetricRadiance;
+  optix::float3 volumetricRadiance[FRAME];
   float         padding;
 };
 
@@ -85,7 +86,7 @@ struct PackedHitRecord
   optix::float4 b;   // normal.y,   normal.z,   atten_Kd.x, atten_Kd.y
   optix::float4 c;   // atten_Kd.z, flags,      radius2,    photon_count
   optix::float4 d;   // flux.x,     flux.y,     flux.z,     accum_atten
-  optix::float4 e;   // volumetricRadiance.x, volumetricRadiance.y, volumetricRadiance.z, padding
+  optix::float4 e[FRAME];   // volumetricRadiance.x, volumetricRadiance.y, volumetricRadiance.z, padding
 };
 
 
@@ -93,9 +94,8 @@ struct HitPRD
 {
     optix::float3 attenuation;
     optix::uint   ray_depth;
-    optix::float3 volumetricRadiance;
+    optix::float3 volumetricRadiance[FRAME];
     float lastTHit;
-
 };
 
 
@@ -106,7 +106,8 @@ struct PhotonRecord
   optix::float3 ray_dir;
   optix::float3 energy;
   optix::uint   axis;
-  optix::float3 pad;
+  float dist;
+  optix::float2 pad;
 };
 
 
@@ -115,7 +116,7 @@ struct PackedPhotonRecord
   optix::float4 a;   // position.x, position.y, position.z, normal.x
   optix::float4 b;   // normal.y,   normal.z,   ray_dir.x,  ray_dir.y
   optix::float4 c;   // ray_dir.z,  energy.x,   energy.y,   energy.z
-  optix::float4 d;   // axis,       padding,    padding,    padding
+  optix::float4 d;   // axis,       dist,    padding,    padding
 };
 
 
@@ -126,6 +127,7 @@ struct PhotonPRD
   optix::uint   pm_index;
   optix::uint   num_deposits;
   optix::uint   ray_depth;
+  float dist; // Distance from the photon to the light source
 };
 
 
@@ -138,7 +140,7 @@ struct VolumetricRadiancePRD
 {
     float sigma_t;
     float sigma_s;
-    optix::float3 radiance;
+    optix::float3 radiance[FRAME];
     unsigned int numHits;
 };
 
@@ -161,4 +163,5 @@ struct Photon
     optix::float3 rayDirection;
     optix::uint   objectId;
     optix::uint numDeposits;
+    float dist;
 };
