@@ -49,6 +49,7 @@ public:
   SUTILAPI static void printUsage( bool doQuit = false );
   SUTILAPI static void printVCAOptions( );
 
+  SUTILAPI static void setStartRendering(bool val) { m_start_rendering = val; };
   SUTILAPI static void setAccelDescriptor( const AccelDescriptor& accel_desc ) { m_accel_desc = accel_desc; }
   SUTILAPI static void setTextColor(const optix::float3& c) { m_text_color = c; }
   SUTILAPI static void setTextShadowColor(const optix::float3& c) { m_text_shadow_color = c; }
@@ -123,6 +124,7 @@ private:
 
   static AccelDescriptor m_accel_desc;
 
+  static bool           m_start_rendering;
   static double         m_last_frame_time;
   static unsigned int   m_last_frame_count;
   static unsigned int   m_frame_count;

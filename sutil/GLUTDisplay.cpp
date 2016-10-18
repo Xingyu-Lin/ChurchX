@@ -66,6 +66,7 @@ AccelDescriptor GLUTDisplay::m_accel_desc;
 double         GLUTDisplay::m_last_frame_time      = 0.0;
 unsigned int   GLUTDisplay::m_last_frame_count     = 0;
 unsigned int   GLUTDisplay::m_frame_count          = 0;
+bool           GLUTDisplay::m_start_rendering      = false;
 
 bool           GLUTDisplay::m_display_fps          = true;
 double         GLUTDisplay::m_fps_update_threshold = 0.5;
@@ -117,7 +118,7 @@ int            GLUTDisplay::m_num_devices          = 0;
 
 bool           GLUTDisplay::m_enable_cpu_rendering = false;
 
-bool           GLUTDisplay::m_use_PBO              = true;
+bool           GLUTDisplay::m_use_PBO              = false;
 
 bool           GLUTDisplay::m_vca_requested = false;
 VCAOptions     GLUTDisplay::m_vca_options;
@@ -1271,6 +1272,29 @@ void GLUTDisplay::display()
   if ( display_requested && m_display_frames ) {
     nvtx::ScopedRange r( "glutSwapBuffers" );
     // Swap buffers
+	if (m_start_rendering) {
+		const int buffer_width = m_scene->getImageWidth();
+		const int buffer_height = m_scene->getImageHeight();
+		GLubyte *pixels = (GLubyte *)malloc(buffer_width * buffer_height * 3);
+		//glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		//glReadBuffer(GL_FRONT);
+		glReadPixels(0,
+			0,
+			buffer_width,
+			buffer_height,
+			GL_RGB,
+			GL_UNSIGNED_BYTE,
+			pixels);
+		static char fname[128];
+		std::string basename = m_save_frames_basename.empty() ? "frame" : m_save_frames_basename;
+		sprintf(fname, "%s_%05d.ppm", basename.c_str(), m_frame_count);
+		FILE *fp = fopen(fname, "wb");
+
+		fprintf(fp, "P6\n%d %d\n255\n", buffer_width, buffer_height);
+		fwrite(pixels, 1, buffer_width * buffer_height * 3, fp);
+		fclose(fp);
+		free(pixels);
+	}
     glutSwapBuffers();
   }
 }

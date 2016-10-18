@@ -676,6 +676,8 @@ void ProgressivePhotonScene::createPhotonMap()
 	m_photons->unmap();
 }
 
+static int rendered_frame_cnt = 0;
+
 void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 {
 	Buffer output_buffer = m_context["rtpass_output_buffer"]->getBuffer();
@@ -721,7 +723,7 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 			debug_buffer[i].position.z << std::endl;
 		m_volumetricPhotonsBuffer->unmap();
 	}
-	printf("Shoot photons start!\n");
+	//printf("Shoot photons start!\n");
 	// Trace photons
 	if (m_print_timings) std::cerr << "Starting photon pass   ... ";
 	Buffer photon_rnd_seeds = m_context["photon_rnd_seeds"]->getBuffer();
@@ -764,7 +766,7 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 		sutilCurrentTime(&t1);
 		if (m_print_timings) std::cerr << "finished. " << t1 - t0 << std::endl;
 	}
-	printf("Gather phase start!\n");
+	//printf("Gather phase start!\n");
 	// Shade view rays by gathering photons
 	if (m_print_timings) std::cerr << "Starting gather pass   ... ";
 	sutilCurrentTime(&t0);
@@ -832,6 +834,28 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 		std::cerr << std::endl;
 	}
 	m_iteration_count++;
+	printf("convergence frame...%d\n", m_iteration_count);
+	if (m_iteration_count > 1500) {
+		GLUTDisplay::setStartRendering(true);
+		printf("rendering frame...%d\n", rendered_frame_cnt);
+		float4* framesData = reinterpret_cast<float4*>(m_frame_buffer->map());
+		
+		//Buffer singleFrameBuffer = createOutputBuffer(RT_FORMAT_FLOAT4, WIDTH, HEIGHT);
+		float4* singleFrame = reinterpret_cast<float4*>(m_display_buffer->map());
+			
+		for (int i = 0; i < HEIGHT; ++i) {
+			for (int j = 0; j < WIDTH; ++j) {
+				singleFrame[i * WIDTH + j] = framesData[rendered_frame_cnt * WIDTH * HEIGHT + WIDTH * i + j];
+			}
+		}
+		//singleFrameBuffer->unmap();
+		//static char fname[128];
+		//sprintf(fname, "frame_%05d.ppm", rendered_frame_cnt);
+		m_display_buffer->unmap();
+		//sutilDisplayFilePPM(fname, m_display_buffer->get());
+		rendered_frame_cnt++;
+		m_frame_buffer->unmap();
+	}
 }
 
 
