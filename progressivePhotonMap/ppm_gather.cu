@@ -83,7 +83,7 @@ void accumulatePhoton( const PackedPhotonRecord& photon,
 RT_PROGRAM void gather()
 {
   clock_t start = clock();
-  PackedHitRecord rec = rtpass_output_buffer[launch_index.x,launch_index.y];
+  PackedHitRecord rec = rtpass_output_buffer[launch_index];
   float3 rec_position = make_float3( rec.a.x, rec.a.y, rec.a.z );
   float3 rec_normal   = make_float3( rec.a.w, rec.b.x, rec.b.y );
   float3 rec_atten_Kd = make_float3( rec.b.z, rec.b.w, rec.c.x );
@@ -93,8 +93,16 @@ RT_PROGRAM void gather()
   float3 rec_flux     = make_float3( rec.d.x, rec.d.y, rec.d.z );
   float  rec_accum_atten = rec.d.w;
   float3 rec_volumetricRadiance[FRAME];
-  for (int i=0; i<FRAME; ++i)
-    rec_volumetricRadiance[i] = make_float3( rec.e[i].x, rec.e[i].y, rec.e[i].z );
+  float unpacked[FRAME*3];
+  for (int i=0; i<FRAME_PACKED; ++i)
+  {
+    unpacked[4 * i] = rec.e[i].x;
+    unpacked[4 * i + 0] = rec.e[i].y;
+    unpacked[4 * i + 1] = rec.e[i].z;
+    unpacked[4 * i + 2] = rec.e[i].w;
+  }
+  for (int i =0; i<FRAME; ++i)
+    rec_volumetricRadiance[i] = make_float3( unpacked[3*i], unpacked[3*i+1], unpacked[3*i+2]);
 
   // Check if this is hit point lies on an emitter or hit background 
   if( !(rec_flags & PPM_HIT) || rec_flags & PPM_OVERFLOW ) {
@@ -233,9 +241,15 @@ RT_PROGRAM void gather()
   float3 direct_flux = light.power * avg_atten *rec_atten_Kd;
   rtpass_output_buffer[launch_index] = rec;
   //float3 final_color = indirect_flux;
+
+  //Attention: sum them up here
+  float3 sum_volRadiance[FRAME];
+  sum_volRadiance[0]=rec_volumetricRadiance[0];
+  for (int i =1; i<FRAME; ++i)
+    sum_volRadiance[i]=sum_volRadiance[i-1]+rec_volumetricRadiance[i];
   float3 final_color[FRAME];
   for (int i=0; i<FRAME; ++i)
-    final_color[i] = direct_flux + indirect_flux + rec_volumetricRadiance[i] / total_emitted + ambient_light*rec_atten_Kd;
+    final_color[i] = direct_flux + indirect_flux + sum_volRadiance[i] / total_emitted + ambient_light*rec_atten_Kd;
 
   //if (fmaxf(rec_volumetricRadiance[i] / total_emitted)>0.0f) final_color = make_float3(0.7f,0.0f,0.0f);
   //if (fmaxf(rec_volumetricRadiance[i])>0.0f) final_color = make_float3(0.7f,0.0f,0.0f);
@@ -245,9 +259,9 @@ RT_PROGRAM void gather()
   //rtPrintf("%f %f\n", tmp.x, total_emitted);
   //if (tmp.x>0)
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,tmp.x, tmp.y, tmp.z);
-  output_buffer[launch_index] = make_float4(final_color[FRAME-1]);
+  output_buffer[launch_index] = make_float4(final_color[8]);
   for (int i=0; i<FRAME; ++i)
-    frame_output_buffer[make_uint3(launch_index, i)] = make_float4(final_color);
+    frame_output_buffer[make_uint3(launch_index, i)] = make_float4(final_color[i]);
   if(use_debug_buffer == 1)
     debug_buffer[launch_index] = make_float4( loop_iter, new_R2, new_N, M );
 }
@@ -268,6 +282,3 @@ RT_PROGRAM void gather_exception()
 {
   output_buffer[launch_index] = make_float4(1.0f, 1.0f, 0.0f, 0.0f);
 }
-
-
-

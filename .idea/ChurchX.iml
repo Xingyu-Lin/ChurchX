@@ -39,26 +39,26 @@
       <sourceFolder url="file://$MODULE_DIR$/sampleConfig.h.in" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/SunSky.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/Mouse.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sutil/ImageLoader.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sutil/HostMeshImpl.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/OptiXMesh.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/GLUTDisplay.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/MeshScene.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sutil/HostMesh.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/rply-1.01/rply.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/rply-1.01/rply.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/PPMLoader.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/AccelDescriptor.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/sutil.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sutil/PPMLoader.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sutil/SampleScene.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/SampleScene.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sutil/OptiXMeshImpl.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/HostMeshImpl.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/MeshBase.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/glm.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/sutil.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/glm.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/MeshScene.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sutil/HostMeshImpl.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/HostMesh.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sutil/SampleScene.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/DeviceMemoryLogger.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/ImageLoader.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/CMakeLists.txt" isTestSource="false" />
@@ -66,17 +66,17 @@
       <sourceFolder url="file://$MODULE_DIR$/sutil/OptiXMeshClasses.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/GLUTDisplay.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/DeviceMemoryLogger.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sutil/HostMesh.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sutil/MeshBase.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/HDRLoader.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sutil/MeshBase.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/ImageDisplay.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/OptiXMesh.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/Mouse.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/ImageDisplay.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sutil/PPMLoader.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/sutilapi.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/OptiXMeshImpl.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/HDRLoader.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sutil/OptiXMeshImpl.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sutil/ImageLoader.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sutil/MeshException.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMake/CompilerInfo.cmake" isTestSource="false" />

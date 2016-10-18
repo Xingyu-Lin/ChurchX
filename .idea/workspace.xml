@@ -16,12 +16,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ffd72111-33df-499a-bff8-29ed087b3ffb" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/ChurchX.iml" afterPath="$PROJECT_DIR$/.idea/ChurchX.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/HitRecordInitialize.cu" afterPath="$PROJECT_DIR$/progressivePhotonMap/HitRecordInitialize.cu" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cu" afterPath="$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cu" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphere.cu" afterPath="$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphere.cu" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphereRadiance.cu" afterPath="$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphereRadiance.cu" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/glass.cu" afterPath="$PROJECT_DIR$/progressivePhotonMap/glass.cu" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/ppm.cpp" afterPath="$PROJECT_DIR$/progressivePhotonMap/ppm.cpp" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/ppm.h" afterPath="$PROJECT_DIR$/progressivePhotonMap/ppm.h" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/ppm_gather.cu" afterPath="$PROJECT_DIR$/progressivePhotonMap/ppm_gather.cu" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/progressivePhotonMap/ppm_ppass.cu" afterPath="$PROJECT_DIR$/progressivePhotonMap/ppm_ppass.cu" />
@@ -49,10 +48,44 @@
       <file leaf-file-name="ppm.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="149">
-              <caret line="840" column="28" selection-start-line="840" selection-start-column="15" selection-end-line="840" selection-end-column="28" />
+            <state relative-caret-position="275">
+              <caret line="420" column="34" selection-start-line="420" selection-start-column="34" selection-end-line="420" selection-end-column="34" />
               <folding>
                 <element signature="e#1359#1396#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="PpmObjLoader.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/progressivePhotonMap/PpmObjLoader.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="VolumetricPhotonSphereRadiance.cu" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphereRadiance.cu">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="345">
+              <caret line="23" column="5" selection-start-line="23" selection-start-column="5" selection-end-line="23" selection-end-column="5" />
+              <folding>
+                <element signature="e#1#19#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ParticipatingMedium.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="150">
+              <caret line="10" column="1" selection-start-line="10" selection-start-column="1" selection-end-line="10" selection-end-column="1" />
+              <folding>
+                <element signature="e#0#32#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -61,8 +94,8 @@
       <file leaf-file-name="ppm_ppass.cu" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm_ppass.cu">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="735">
-              <caret line="53" column="1" selection-start-line="53" selection-start-column="1" selection-end-line="53" selection-end-column="1" />
+            <state relative-caret-position="328">
+              <caret line="120" column="4" selection-start-line="120" selection-start-column="4" selection-end-line="120" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -71,9 +104,11 @@
       <file leaf-file-name="ppm.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="219">
-              <caret line="77" column="36" selection-start-line="77" selection-start-column="36" selection-end-line="77" selection-end-column="36" />
-              <folding />
+            <state relative-caret-position="360">
+              <caret line="24" column="27" selection-start-line="24" selection-start-column="27" selection-end-line="24" selection-end-column="27" />
+              <folding>
+                <element signature="e#3971#4258#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -81,8 +116,8 @@
       <file leaf-file-name="ParticipatingMedium.cu" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cu">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2865">
-              <caret line="191" column="53" selection-start-line="191" selection-start-column="53" selection-end-line="191" selection-end-column="53" />
+            <state relative-caret-position="-167">
+              <caret line="157" column="8" selection-start-line="157" selection-start-column="8" selection-end-line="157" selection-end-column="8" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -93,19 +128,21 @@
       <file leaf-file-name="ppm_gather.cu" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm_gather.cu">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="149">
-              <caret line="85" column="30" selection-start-line="85" selection-start-column="24" selection-end-line="85" selection-end-column="30" />
+            <state relative-caret-position="337">
+              <caret line="261" column="57" selection-start-line="261" selection-start-column="57" selection-end-line="261" selection-end-column="57" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ppm_rtpass.cu" pinned="false" current-in-tab="true">
+      <file leaf-file-name="ppm_rtpass.cu" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm_rtpass.cu">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="53" column="26" selection-start-line="53" selection-start-column="26" selection-end-line="53" selection-end-column="26" />
-              <folding />
+            <state relative-caret-position="360">
+              <caret line="24" column="0" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+              <folding>
+                <element signature="e#1158#1176#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -118,15 +155,16 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphereRadiance.cu" />
-        <option value="$PROJECT_DIR$/progressivePhotonMap/ppm_ppass.cu" />
-        <option value="$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cu" />
-        <option value="$PROJECT_DIR$/progressivePhotonMap/ppm.h" />
-        <option value="$PROJECT_DIR$/progressivePhotonMap/ppm_gather.cu" />
         <option value="$PROJECT_DIR$/progressivePhotonMap/ppm.cpp" />
         <option value="$PROJECT_DIR$/progressivePhotonMap/glass.cu" />
         <option value="$PROJECT_DIR$/progressivePhotonMap/HitRecordInitialize.cu" />
         <option value="$PROJECT_DIR$/progressivePhotonMap/ppm_rtpass.cu" />
+        <option value="$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphere.cu" />
+        <option value="$PROJECT_DIR$/progressivePhotonMap/ppm.h" />
+        <option value="$PROJECT_DIR$/progressivePhotonMap/ppm_gather.cu" />
+        <option value="$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cu" />
+        <option value="$PROJECT_DIR$/progressivePhotonMap/ppm_ppass.cu" />
+        <option value="$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphereRadiance.cu" />
       </list>
     </option>
   </component>
@@ -183,6 +221,24 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="ChurchX" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ChurchX" />
+              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$MyProjectTreeStructure$1" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ChurchX" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="support" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="freeglut" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -408,13 +464,14 @@
     <frame x="49" y="23" width="1391" height="877" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.28094885" sideWeight="0.5" order="3" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2846553" sideWeight="0.5" order="3" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32611465" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32356688" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32909784" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32866243" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3370508" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33630574" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
@@ -424,7 +481,6 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -446,24 +502,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/glass.cu">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1635">
-          <caret line="109" column="54" selection-start-line="109" selection-start-column="54" selection-end-line="109" selection-end-column="54" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1770">
-          <caret line="118" column="40" selection-start-line="118" selection-start-column="40" selection-end-line="118" selection-end-column="40" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -523,7 +561,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="570">
           <caret line="38" column="20" selection-start-line="38" selection-start-column="20" selection-end-line="38" selection-end-column="20" />
-          <folding />
+          <folding>
+            <element signature="e#3971#4258#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -541,7 +581,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1005">
           <caret line="67" column="2" selection-start-line="67" selection-start-column="2" selection-end-line="67" selection-end-column="2" />
-          <folding />
+          <folding>
+            <element signature="e#1158#1176#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -614,7 +656,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#3971#4258#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -632,7 +676,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1005">
           <caret line="67" column="2" selection-start-line="67" selection-start-column="2" selection-end-line="67" selection-end-column="2" />
-          <folding />
+          <folding>
+            <element signature="e#1158#1176#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -713,7 +759,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1395">
           <caret line="93" column="36" selection-start-line="93" selection-start-column="36" selection-end-line="93" selection-end-column="36" />
-          <folding />
+          <folding>
+            <element signature="e#3971#4258#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -721,7 +769,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1005">
           <caret line="67" column="2" selection-start-line="67" selection-start-column="2" selection-end-line="67" selection-end-column="2" />
-          <folding />
+          <folding>
+            <element signature="e#1158#1176#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -805,44 +855,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphere.cu">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#24#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="149">
-          <caret line="840" column="28" selection-start-line="840" selection-start-column="15" selection-end-line="840" selection-end-column="28" />
-          <folding>
-            <element signature="e#1359#1396#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cu">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2865">
-          <caret line="191" column="53" selection-start-line="191" selection-start-column="53" selection-end-line="191" selection-end-column="53" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="219">
-          <caret line="77" column="36" selection-start-line="77" selection-start-column="36" selection-end-line="77" selection-end-column="36" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/progressivePhotonMap/glass.cu">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="158">
@@ -863,37 +875,95 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphereRadiance.cu">
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/PpmObjLoader.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="61" selection-start-line="8" selection-start-column="57" selection-end-line="8" selection-end-column="61" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="275">
+          <caret line="420" column="34" selection-start-line="420" selection-start-column="34" selection-end-line="420" selection-end-column="34" />
           <folding>
-            <element signature="e#1#19#0" expanded="true" />
+            <element signature="e#1359#1396#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="24" column="27" selection-start-line="24" selection-start-column="27" selection-end-line="24" selection-end-column="27" />
+          <folding>
+            <element signature="e#3971#4258#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm_rtpass.cu">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="24" column="0" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+          <folding>
+            <element signature="e#1158#1176#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm_gather.cu">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="337">
+          <caret line="261" column="57" selection-start-line="261" selection-start-column="57" selection-end-line="261" selection-end-column="57" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphere.cu">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="23" column="60" selection-start-line="23" selection-start-column="60" selection-end-line="23" selection-end-column="60" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="1" selection-start-line="10" selection-start-column="1" selection-end-line="10" selection-end-column="1" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ParticipatingMedium.cu">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-167">
+          <caret line="157" column="8" selection-start-line="157" selection-start-column="8" selection-end-line="157" selection-end-column="8" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm_ppass.cu">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="735">
-          <caret line="53" column="1" selection-start-line="53" selection-start-column="1" selection-end-line="53" selection-end-column="1" />
+        <state relative-caret-position="328">
+          <caret line="120" column="4" selection-start-line="120" selection-start-column="4" selection-end-line="120" selection-end-column="4" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm_gather.cu">
+    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/VolumetricPhotonSphereRadiance.cu">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="149">
-          <caret line="85" column="30" selection-start-line="85" selection-start-column="24" selection-end-line="85" selection-end-column="30" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/progressivePhotonMap/ppm_rtpass.cu">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="53" column="26" selection-start-line="53" selection-start-column="26" selection-end-line="53" selection-end-column="26" />
-          <folding />
+        <state relative-caret-position="345">
+          <caret line="23" column="5" selection-start-line="23" selection-start-column="5" selection-end-line="23" selection-end-column="5" />
+          <folding>
+            <element signature="e#1#19#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

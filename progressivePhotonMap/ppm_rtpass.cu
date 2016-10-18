@@ -69,8 +69,8 @@ RT_PROGRAM void rtpass_camera()
     prd.volumetricRadiance[i]=make_float3(0.0f);
   rtTrace( top_object, ray, prd );
   // Each one of the output buffer is the sum of all the prefix cells
-  for (int i=1; i<FRAME; ++i)
-    rtpass_output_buffer[launch_index] = rtpass_output_buffer[make_uint3(launch_index, i-1)] + prd.volumetricRadiance[i];
+  for (int i=0; i<FRAME; ++i)
+    rtpass_output_buffer[launch_index].volumetricRadiance[i] += rtpass_output_buffer[launch_index].volumetricRadiance[i] + prd.volumetricRadiance[i];
 }
 
 // 
@@ -98,7 +98,7 @@ RT_PROGRAM void rtpass_closest_hit()
 {
   // Check if this is a light source
   if( fmaxf( emitted ) > 0.0f ) {
-    HitRecord& rec = rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)];
+    HitRecord& rec = rtpass_output_buffer[launch_index];
     rec.attenuated_Kd = emitted*hit_prd.attenuation; 
     rec.flags = 0u;
     return;
@@ -113,8 +113,8 @@ RT_PROGRAM void rtpass_closest_hit()
   double tHitStack = t_hit + 0.1 - 0.1; // Important, prevents compiler optimization on variable
   if( fmaxf( Kd ) > 0.0f ) {
     // We hit a diffuse surface; record hit and return
-    HitRecord rec = rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)];
-    rec.position = hit_point; 
+    HitRecord rec = rtpass_output_buffer[launch_index];
+    rec.position = hit_point;
     rec.normal = ffnormal;
     if( !use_grid ) {
       rec.attenuated_Kd = Kd * hit_prd.attenuation;
@@ -133,7 +133,7 @@ RT_PROGRAM void rtpass_closest_hit()
     rec.flags = PPM_HIT;
 	rec.attenuated_Kd *= make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
     //rtPrintf("%f %f %f\n", rec.attenuated_Kd.x, rec.attenuated_Kd.y, rec.attenuated_Kd.z);
-    rtpass_output_buffer[make_uint3(launch_index.x, launch_index.y,0)] = rec;
+    rtpass_output_buffer[launch_index] = rec;
   } else {
     // Make reflection ray
     hit_prd.attenuation = hit_prd.attenuation * Ks;

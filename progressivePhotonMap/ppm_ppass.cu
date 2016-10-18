@@ -116,6 +116,9 @@ RT_PROGRAM void ppass_camera()
     ppass_output_buffer[i+pm_index].energy = make_float3(0.0f);
   }
 
+  //float3 dist3 = ray.origin - make_float3(343.0f, 548.6f, 227.0f);
+  //float _dist = sqrt(dist3.x * dist3.x + dist3.y * dist3.y + dist3.z * dist3.z);
+  //rtPrintf("%f\n", _dist);
   PhotonPRD prd;
   //  rec.ray_dir = ray_direction; // set in ppass_closest_hit
   prd.energy = light.power;

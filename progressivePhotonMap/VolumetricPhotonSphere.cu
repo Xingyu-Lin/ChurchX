@@ -6,7 +6,8 @@
 using namespace optix;
 
 rtDeclareVariable(float3, photonPosition, attribute photonPosition,); 
-rtDeclareVariable(float3, photonPower, attribute photonPower,); 
+rtDeclareVariable(float3, photonPower, attribute photonPower,);
+rtDeclareVariable(float, photonDist, attribute dist, );
 rtDeclareVariable(uint, photonId, attribute photonId,); 
 rtDeclareVariable(float, volumetricRadius, ,); 
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay,);
@@ -33,6 +34,7 @@ RT_PROGRAM void intersect(int primIdx)
             photonId = primIdx;
             photonPosition = photon.position;
             photonPower = photon.power*photon.numDeposits;
+            photonDist = photon.dist;
             if( rtReportIntersection( 0 ) )
                 check_second = false;
         } 
@@ -44,6 +46,7 @@ RT_PROGRAM void intersect(int primIdx)
             {
                 photonId = primIdx;
                 photonPosition = photon.position;
+                photonDist = photon.dist;
                 photonPower = photon.power*photon.numDeposits;
                 rtReportIntersection( 0 );
             }

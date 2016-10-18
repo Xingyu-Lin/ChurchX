@@ -49,12 +49,11 @@ RT_PROGRAM void closestHitRadiance()
         float distance = hitPrd.lastTHit;
         float transmittance = exp(-distance*sigma_t);
         VolumetricRadiancePRD volRadiancePrd;
-        volRadiancePrd.radiance = make_float3(0);
         volRadiancePrd.numHits = 0;
         volRadiancePrd.sigma_t = sigma_t;
         volRadiancePrd.sigma_s = sigma_s;
         for (int i=0; i<FRAME; ++i)
-            volRadiancePrd.radiance[i]=0;
+            volRadiancePrd.radiance[i]=make_float3(0.0f);
         float3 tmpdirection = ray.direction;
         // Get volumetric radiance
         Ray ray(hitPoint, tmpdirection, volumetric_radiance, 0.0000001, distance);
@@ -155,6 +154,8 @@ RT_PROGRAM void closestHitPhoton()
 
     if(depth == photonPrd.ray_depth)
     {
+        photonPrd.dist += scatterLocationT;
+        
         const float scatterAlbedo = sigma_s/sigma_t;
 
         if (sample >= scatterAlbedo)
