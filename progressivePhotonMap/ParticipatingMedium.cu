@@ -67,8 +67,8 @@ RT_PROGRAM void closestHitRadiance()
         {
             hitPrd.volumetricRadiance[i] *= transmittance;
             hitPrd.volumetricRadiance[i] += attenSaved * volRadiancePrd.radiance[i];
-            hitPrd.attenuation *= transmittance;
         }
+        hitPrd.attenuation *= transmittance;
         //rtPrintf("%f\n", volRadiancePrd.radiance.x);
         //if (volRadiancePrd.numHits>0) rtPrintf("%f %f %f %d \n", distance , transmittance, hitPrd.volumetricRadiance.x, volRadiancePrd.numHits);
     }

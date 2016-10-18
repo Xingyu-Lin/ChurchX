@@ -14,6 +14,7 @@ RT_PROGRAM void kernel()
 {
     Photon photon = Photon(make_float3(0), make_float3(0), make_float3(0), 1);
     photon.numDeposits = 0;
+    photon.dist =0;
     volumetricPhotons[launchIndex.x] = photon;
 }
 

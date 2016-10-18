@@ -24,7 +24,7 @@ RT_PROGRAM void anyHitRadiance()
     float dist = photonDist;
     //rtPrintf("%f %f\n", dist, _dist);
     unsigned int frame = floor(dist * FRAME / TOTAL_DISTANCE);
-    rtPrintf("%f\n",  dist);
+    //rtPrintf("%f\n",  dist);
     if(t < ray.tmax && t > ray.tmin)
     {
         volRadiancePrd.radiance[frame] += (1/(M_PIf*volumetricRadius*volumetricRadius)) * photonPower * exp(-volRadiancePrd.sigma_t*t) * (1.f/(4.f*M_PIf));

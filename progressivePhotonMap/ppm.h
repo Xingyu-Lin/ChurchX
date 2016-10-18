@@ -21,10 +21,10 @@
 
 #include <optixu/optixu_math_namespace.h>
 
-#define NUM_VOLUMETRIC_PHOTONS 20000
+#define NUM_VOLUMETRIC_PHOTONS 2000000
 #define TOTAL_DISTANCE 1000
-#define  FRAME 20 //divisable by 4
-#define  FRAME_PACKED 15
+#define  FRAME 40 //divisable by 4
+#define  FRAME_PACKED 30
 #define  PPM_X         ( 1 << 0 )
 #define  PPM_Y         ( 1 << 1 )
 #define  PPM_Z         ( 1 << 2 )

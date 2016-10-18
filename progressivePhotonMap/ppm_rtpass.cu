@@ -70,7 +70,7 @@ RT_PROGRAM void rtpass_camera()
   rtTrace( top_object, ray, prd );
   // Each one of the output buffer is the sum of all the prefix cells
   for (int i=0; i<FRAME; ++i)
-    rtpass_output_buffer[launch_index].volumetricRadiance[i] += rtpass_output_buffer[launch_index].volumetricRadiance[i] + prd.volumetricRadiance[i];
+    rtpass_output_buffer[launch_index].volumetricRadiance[i] = rtpass_output_buffer[launch_index].volumetricRadiance[i] + prd.volumetricRadiance[i];
 }
 
 // 
