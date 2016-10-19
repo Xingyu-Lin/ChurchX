@@ -22,9 +22,9 @@
 #include <optixu/optixu_math_namespace.h>
 
 #define NUM_VOLUMETRIC_PHOTONS 2000000
-#define TOTAL_DISTANCE 600
-#define  FRAME 48 //divisable by 4
-#define  FRAME_PACKED 36
+#define TOTAL_DISTANCE 1600
+#define  FRAME 12 //divisable by 4
+#define  FRAME_PACKED 9
 #define  PPM_X         ( 1 << 0 )
 #define  PPM_Y         ( 1 << 1 )
 #define  PPM_Z         ( 1 << 2 )
@@ -34,6 +34,7 @@
 #define  PPM_IN_SHADOW ( 1 << 5 )
 #define  PPM_OVERFLOW  ( 1 << 6 )
 #define  PPM_HIT       ( 1 << 7 )
+#define  IS_CHURCH
 
 
 enum RayTypes

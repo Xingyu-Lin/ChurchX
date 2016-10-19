@@ -250,8 +250,10 @@ RT_PROGRAM void gather()
     sum_volRadiance[i]=sum_volRadiance[i-1]+rec_volumetricRadiance[i];
     //sum_volRadiance[i]=rec_volumetricRadiance[i];
   float3 final_color[FRAME];
-  for (int i=0; i<FRAME; ++i)
-    final_color[i] = direct_flux + indirect_flux + sum_volRadiance[i] / total_emitted + ambient_light*rec_atten_Kd;
+  for (int i = 0; i < FRAME; ++i) {
+	  //rtPrintf("%f, %f, %f \n", sum_volRadiance[i].x, sum_volRadiance[i].y, sum_volRadiance[i].z);
+	  final_color[i] = direct_flux + indirect_flux + sum_volRadiance[i] / total_emitted + ambient_light*rec_atten_Kd;
+  }
     //final_color[i] = direct_flux + indirect_flux + ambient_light*rec_atten_Kd;
 
   //if (fmaxf(rec_volumetricRadiance[i] / total_emitted)>0.0f) final_color = make_float3(0.7f,0.0f,0.0f);
@@ -262,7 +264,7 @@ RT_PROGRAM void gather()
   //rtPrintf("%f %f\n", tmp.x, total_emitted);
   //if (tmp.x>0)
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,tmp.x, tmp.y, tmp.z);
-  output_buffer[launch_index] = make_float4(final_color[17]);
+  output_buffer[launch_index] = make_float4(final_color[4]);
   for (int i=0; i<FRAME; ++i)
     frame_output_buffer[make_uint3(launch_index, i)] = make_float4(final_color[i]);
   if(use_debug_buffer == 1)

@@ -180,13 +180,13 @@ RT_PROGRAM void ppass_closest_hit()
     // Make reflection ray
     new_ray_dir = reflect( ray.direction, ffnormal );
   }
-  if (ray.ray_type == photon_in_participating_medium && hit_record.ray_depth == -1)
-  {
-    //rtPrintf("ok\n");
-  }
+  //if (ray.ray_type == photon_in_participating_medium && hit_record.ray_depth == -1)
+  //{
+  //  //rtPrintf("ok\n");
+  //}
   hit_record.ray_depth++;
   //rtPrintf("%d\n",hit_record.ray_depth);
-  if ( hit_record.num_deposits >= max_photon_count || hit_record.ray_depth >= max_depth)
+  if (hit_record.num_deposits >= max_photon_count || hit_record.ray_depth >= max_depth)
     return;
 
   //TODO: XINGYU, add photon reflection, pay attention to the hit_record.dist
@@ -194,8 +194,11 @@ RT_PROGRAM void ppass_closest_hit()
 	  optix::Ray new_ray(hit_point, new_ray_dir, ppass_and_gather_ray_type, scene_epsilon);
 	  rtTrace(top_object, new_ray, hit_record);
   }*/
+#ifdef IS_CHURCH
+
+#else
   //optix::Ray new_ray( hit_point, new_ray_dir, ppass_and_gather_ray_type, scene_epsilon );
   //rtTrace(top_object, new_ray, hit_record);
-
+#endif
 }
 

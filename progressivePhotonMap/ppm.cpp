@@ -393,43 +393,43 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 	}
 
 	// Populate scene hierarchy
+	
+	// Related to photonSphere
+	{
+		m_volumetricPhotonsBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+		m_volumetricPhotonsBuffer->setFormat(RT_FORMAT_USER);
+		m_volumetricPhotonsBuffer->setElementSize(sizeof(Photon));
+		m_volumetricPhotonsBuffer->setSize(NUM_VOLUMETRIC_PHOTONS);
+		m_context["volumetricPhotons"]->setBuffer(m_volumetricPhotonsBuffer);
+
+		optix::Geometry photonSpheres = m_context->createGeometry();
+		photonSpheres->setPrimitiveCount(NUM_VOLUMETRIC_PHOTONS);
+		std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonSphere.cu");
+		photonSpheres->setIntersectionProgram(m_context->createProgramFromPTXFile(ptx_path, "intersect"));
+		photonSpheres->setBoundingBoxProgram(m_context->createProgramFromPTXFile(ptx_path, "boundingBox"));
+
+		optix::Material material = m_context->createMaterial();
+		ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonSphereRadiance.cu");
+		material->setAnyHitProgram(volumetric_radiance, m_context->createProgramFromPTXFile(ptx_path, "anyHitRadiance"));
+		optix::GeometryInstance volumetricPhotonSpheres = m_context->createGeometryInstance(photonSpheres, &material, &material + 1);
+		volumetricPhotonSpheres["photonsBuffer"]->setBuffer(m_volumetricPhotonsBuffer);
+
+		m_volumetricPhotonsRoot = m_context->createGeometryGroup();
+		m_volumetricPhotonsRoot->setChildCount(1);
+		optix::Acceleration m_volumetricPhotonSpheresAcceleration = m_context->createAcceleration("MedianBvh", "Bvh");
+		m_volumetricPhotonsRoot->setAcceleration(m_volumetricPhotonSpheresAcceleration);
+		m_volumetricPhotonsRoot->setChild(0, volumetricPhotonSpheres);
+		m_context["volumetricPhotonsRoot"]->set(m_volumetricPhotonsRoot);
+	}
+
+	// Clear Volumetric Photons Program
+
+	{
+		std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonInitialize.cu");
+		Program program = m_context->createProgramFromPTXFile(ptx_path, "kernel");
+		m_context->setRayGenerationProgram(clear_radiance_photon, program);
+	}
 	if (!m_cornell_box) {
-		// Related to photonSphere
-		{
-			m_volumetricPhotonsBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
-			m_volumetricPhotonsBuffer->setFormat(RT_FORMAT_USER);
-			m_volumetricPhotonsBuffer->setElementSize(sizeof(Photon));
-			m_volumetricPhotonsBuffer->setSize(NUM_VOLUMETRIC_PHOTONS);
-			m_context["volumetricPhotons"]->setBuffer(m_volumetricPhotonsBuffer);
-
-			optix::Geometry photonSpheres = m_context->createGeometry();
-			photonSpheres->setPrimitiveCount(NUM_VOLUMETRIC_PHOTONS);
-			std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonSphere.cu");
-			photonSpheres->setIntersectionProgram(m_context->createProgramFromPTXFile(ptx_path, "intersect"));
-			photonSpheres->setBoundingBoxProgram(m_context->createProgramFromPTXFile(ptx_path, "boundingBox"));
-
-			optix::Material material = m_context->createMaterial();
-			ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonSphereRadiance.cu");
-			material->setAnyHitProgram(volumetric_radiance, m_context->createProgramFromPTXFile(ptx_path, "anyHitRadiance"));
-			optix::GeometryInstance volumetricPhotonSpheres = m_context->createGeometryInstance(photonSpheres, &material, &material + 1);
-			volumetricPhotonSpheres["photonsBuffer"]->setBuffer(m_volumetricPhotonsBuffer);
-
-			m_volumetricPhotonsRoot = m_context->createGeometryGroup();
-			m_volumetricPhotonsRoot->setChildCount(1);
-			optix::Acceleration m_volumetricPhotonSpheresAcceleration = m_context->createAcceleration("MedianBvh", "Bvh");
-			m_volumetricPhotonsRoot->setAcceleration(m_volumetricPhotonSpheresAcceleration);
-			m_volumetricPhotonsRoot->setChild(0, volumetricPhotonSpheres);
-			m_context["volumetricPhotonsRoot"]->set(m_volumetricPhotonsRoot);
-		}
-
-		// Clear Volumetric Photons Program
-
-		{
-			std::string ptx_path = ptxpath("progressivePhotonMap", "VolumetricPhotonInitialize.cu");
-			Program program = m_context->createProgramFromPTXFile(ptx_path, "kernel");
-			m_context->setRayGenerationProgram(clear_radiance_photon, program);
-		}
-
 		optix::Aabb aabb;
 		if (loadObjConfig(std::string(sutilSamplesDir()) + "/progressivePhotonMap/data/churchdata/config.txt") == -1) return;
 		loadObjGeometry();
@@ -481,7 +481,7 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 		m_light.v1 = make_float3(0.0f, 0.0f, 105.0f);
 		m_light.v2 = make_float3(-130.0f, 0.0f, 0.0f);
 		m_light.direction = normalize(cross(m_light.v1, m_light.v2));
-		m_light.power = make_float3(0.5e6f, 0.4e6f, 0.2e6f);
+		m_light.power = 0.6 * make_float3(0.5e6f, 0.4e6f, 0.2e6f);
 		m_context["light"]->setUserData(sizeof(PPMLight), &m_light);
 		m_context["rtpass_default_radius2"]->setFloat(400.0f);
 		m_context["ambient_light"]->setFloat(0.0f, 0.0f, 0.0f);
@@ -1168,15 +1168,53 @@ void ProgressivePhotonScene::createCornellBoxGeometry()
 	gis.back()["emitted"]->setFloat(light);
 
 
+	//Participating media
+	
+	ParticipatingMedium partmedium = ParticipatingMedium(0.05, 0.01);
+	optix::Aabb box;
+	int boxsize = 500;
+	box.set(make_float3(-boxsize, -boxsize, -boxsize), make_float3(boxsize, boxsize, boxsize));
+	optix::Geometry geometry = m_context->createGeometry();
+
+	//AABInstance participatingMediumCube (partmedium, box); ==
+	geometry->setPrimitiveCount(1u);
+	ptx_path = ptxpath("progressivePhotonMap", "ABB.cu");
+	geometry->setBoundingBoxProgram(m_context->createProgramFromPTXFile(ptx_path, "boundingBox"));
+	geometry->setIntersectionProgram(m_context->createProgramFromPTXFile(ptx_path, "intersect"));
+	float3 min = box.m_min;
+	geometry["cuboidMin"]->setFloat(box.m_min);
+	geometry["cuboidMax"]->setFloat(box.m_max);
+	std::string partmedium_ptxpath = ptxpath("progressivePhotonMap", "ParticipatingMedium.cu");
+	optix::Material ptM = partmedium.getOptixMaterial(m_context, partmedium_ptxpath);
+
+	GeometryInstance gi = m_context->createGeometryInstance(geometry, &ptM, &ptM + 1);
+	gi["sigma_a"]->setFloat(m_sigma_a);
+	gi["sigma_s"]->setFloat(m_sigma_s);
+	/*optix::GeometryGroup group = m_context->createGeometryGroup();
+	group->setChildCount(1);
+	group->setChild(0, gi);
+	optix::Acceleration a = m_context->createAcceleration("Sbvh", "Bvh");
+	group->setAcceleration(a);*/
+	
+	Group TopGroup = m_context->createGroup();
+
 	// Create geometry group
 	GeometryGroup geometry_group = m_context->createGeometryGroup();
-	geometry_group->setChildCount(static_cast<unsigned int>(gis.size()));
+	geometry_group->setChildCount(static_cast<unsigned int>(gis.size() + 1));
 	for (unsigned int i = 0; i < gis.size(); ++i)
 		geometry_group->setChild(i, gis[i]);
-	geometry_group->setAcceleration(m_context->createAcceleration("Bvh", "Bvh"));
+	//push participating media
+	geometry_group->setChild(gis.size(), gi);
+	geometry_group->setAcceleration(m_context->createAcceleration("Sbvh", "Bvh"));
 
-	m_context["top_object"]->set(geometry_group);
-	m_context["top_shadower"]->set(geometry_group);
+	TopGroup->setChildCount(TopGroup->getChildCount() + 1);
+	TopGroup->setChild(TopGroup->getChildCount() - 1, geometry_group);
+	//TopGroup->setChildCount(TopGroup->getChildCount() + 1);
+	//TopGroup->setChild(TopGroup->getChildCount() - 1, group);
+	TopGroup->setAcceleration(m_context->createAcceleration("Sbvh", "Bvh"));
+
+	m_context["top_object"]->set(TopGroup);
+	m_context["top_shadower"]->set(TopGroup);
 }
 
 
@@ -1305,7 +1343,10 @@ int main(int argc, char** argv)
 	srand(time(0));
 	bool print_timings = false;
 	bool display_debug_buffer = false;
-	bool cornell_box = false;
+	bool cornell_box = true;
+#ifdef IS_CHURCH
+	cornell_box = false;
+#endif
 	float timeout = -1.0f;
 	unsigned int photon_launch_dim = 512u;
 
