@@ -116,7 +116,7 @@ RT_PROGRAM void rtpass_closest_hit()
   double tHitStack = t_hit + 0.1 - 0.1; // Important, prevents compiler optimization on variable
   if( fmaxf( Kd ) > 0.0f ) {
     // We hit a diffuse surface; record hit and return
-    HitRecord rec = rtpass_output_buffer[launch_index];
+	HitRecord rec = rtpass_output_buffer[launch_index];
     rec.position = hit_point;
     rec.normal = ffnormal;
     if( !use_grid ) {

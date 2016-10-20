@@ -123,6 +123,8 @@ RT_PROGRAM void gather()
 
   int photon_map_size = photon_map.size(); // for debugging
 
+  float hit_point_distance = 50000.0;
+
   uint num_new_photons = 0u;
   float3 flux_M = make_float3( 0.0f, 0.0f, 0.0f );
   uint loop_iter = 0;
@@ -140,6 +142,8 @@ RT_PROGRAM void gather()
 
       if (distance2 <= rec_radius2) {
         accumulatePhoton(photon, rec_normal, rec_atten_Kd, num_new_photons, flux_M);
+		//hit_point_distance = photon.d.y;
+		//rtPrintf("%f\n", hit_point_distance);
       }
 
       // Recurse
@@ -193,6 +197,8 @@ RT_PROGRAM void gather()
   if( light.is_area_light ) {
     if (1)
     {
+	  float3 diff = light.anchor - rec_position;
+	  hit_point_distance = sqrt(dot(diff, diff));
       uint2 seed = image_rnd_seeds[launch_index];
       float2 sample = make_float2(rnd(seed.x), rnd(seed.y));
       image_rnd_seeds[launch_index] = seed;
@@ -204,6 +210,8 @@ RT_PROGRAM void gather()
       point_on_light = rec_position - dist_scale * light.direction;
     }
   } else {
+	float3 diff = light.position - rec_position;
+	hit_point_distance = sqrt(dot(diff, diff));
     point_on_light = light.position;
     dist_scale = light.radius / ( M_PIf * 0.5f); 
   }
@@ -233,8 +241,12 @@ RT_PROGRAM void gather()
   light_atten /= dist_scale*light_dist*light_dist;
   if( light_atten < 0.0f ) light_atten = 0.0f;   // TODO Shouldnt be needed but we get acne near light w/out it
   rec.d.w = rec_accum_atten + light_atten;
-  float avg_atten = rec.d.w / (frame_number+1.0f);
-  //rtPrintf("%f\n",frame_number);
+
+  //float distance = rec.f.x;
+  //rtPrintf("%f\n", hit_point_distance);
+  unsigned int directFluxFrame = floor(hit_point_distance * FRAME / TOTAL_DISTANCE);
+  float avg_atten = rec.d.w / (frame_number + 1.0f);
+  //rtPrintf("%d\n", directFluxFrame);
 
 
   //rec_atten_Kd += make_float3(tex2D(diffuse_map, texcoord.x*diffuse_map_scale, texcoord.y*diffuse_map_scale));
@@ -252,7 +264,9 @@ RT_PROGRAM void gather()
   float3 final_color[FRAME];
   for (int i = 0; i < FRAME; ++i) {
 	  //rtPrintf("%f, %f, %f \n", sum_volRadiance[i].x, sum_volRadiance[i].y, sum_volRadiance[i].z);
-	  final_color[i] = direct_flux + indirect_flux + sum_volRadiance[i] / total_emitted + ambient_light*rec_atten_Kd;
+	  final_color[i] = sum_volRadiance[i] / total_emitted + ambient_light*rec_atten_Kd;
+	  if (i >= directFluxFrame)
+		  final_color[i] += direct_flux + indirect_flux;
   }
     //final_color[i] = direct_flux + indirect_flux + ambient_light*rec_atten_Kd;
 
@@ -264,7 +278,7 @@ RT_PROGRAM void gather()
   //rtPrintf("%f %f\n", tmp.x, total_emitted);
   //if (tmp.x>0)
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,tmp.x, tmp.y, tmp.z);
-  output_buffer[launch_index] = make_float4(final_color[2]);
+  output_buffer[launch_index] = make_float4(final_color[45]);
   for (int i=0; i<FRAME; ++i)
     frame_output_buffer[make_uint3(launch_index, i)] = make_float4(final_color[i]);
   if(use_debug_buffer == 1)

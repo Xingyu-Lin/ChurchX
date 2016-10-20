@@ -22,9 +22,9 @@
 #include <optixu/optixu_math_namespace.h>
 
 #define NUM_VOLUMETRIC_PHOTONS 2000000
-#define TOTAL_DISTANCE 1600
-#define  FRAME 12 //divisable by 4
-#define  FRAME_PACKED 9
+#define TOTAL_DISTANCE 1000
+#define  FRAME 48 //divisable by 4
+#define  FRAME_PACKED 36
 #define  PPM_X         ( 1 << 0 )
 #define  PPM_Y         ( 1 << 1 )
 #define  PPM_Z         ( 1 << 2 )
@@ -78,6 +78,8 @@ struct HitRecord
   optix::float3 flux;             //
   float         accum_atten;
   optix::float3 volumetricRadiance[FRAME];
+  float         dist;
+  optix::float3        padding;
 };
 
 
@@ -88,6 +90,7 @@ struct PackedHitRecord
   optix::float4 c;   // atten_Kd.z, flags,      radius2,    photon_count
   optix::float4 d;   // flux.x,     flux.y,     flux.z,     accum_atten
   optix::float4 e[FRAME_PACKED];   // volumetricRadiance[i]
+  optix::float4 f;   //distance     padding
 };
 
 
