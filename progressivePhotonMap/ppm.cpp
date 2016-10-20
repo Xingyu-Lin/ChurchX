@@ -287,7 +287,12 @@ void ProgressivePhotonScene::initScene(InitialCameraData& camera_data)
 
 	m_context["max_depth"]->setUint(3);
 	m_context["max_photon_count"]->setUint(MAX_PHOTON_COUNT);
-	m_context["scene_epsilon"]->setFloat(1.e-3f);
+	#ifdef IS_CHURCH
+		m_context["scene_epsilon"]->setFloat(1.e-4f);
+    #else
+		m_context["scene_epsilon"]->setFloat(1.e-3f);
+    #endif
+
 	m_context["alpha"]->setFloat(0.7f);
 	m_context["total_emitted"]->setFloat(0.0f);
 	m_context["frame_number"]->setFloat(0.0f);

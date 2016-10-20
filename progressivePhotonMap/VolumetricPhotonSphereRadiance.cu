@@ -23,9 +23,18 @@ RT_PROGRAM void anyHitRadiance()
     //float _dist = sqrt(dist3.x * dist3.x + dist3.y * dist3.y + dist3.z * dist3.z);
     float dist = photonDist;
     //rtPrintf("%f %f\n", dist, _dist);
-    unsigned int frame = floor(dist * FRAME / TOTAL_DISTANCE);
+    int frame = floor(dist * TOTAL_FRAME / TOTAL_DISTANCE) - (START_SECTION*FRAME);
+    //int frame = floor(dist * FRAME / TOTAL_DISTANCE);
+    bool flag=true;
+    #ifdef PREFIX_SUM
+        if (frame<0) frame=0;
+        if (frame>=FRAME) flag=false;
+    #else
+        if (frame<0) flag=false;
+        if (frame>=FRAME) flag=false;
+    #endif
     //rtPrintf("%f\n",  dist);
-    if(t < ray.tmax && t > ray.tmin)
+    if(t < ray.tmax && t > ray.tmin && flag)
     {
         volRadiancePrd.radiance[frame] += (1/(M_PIf*volumetricRadius*volumetricRadius)) * photonPower * exp(-volRadiancePrd.sigma_t*t) * (1.f/(4.f*M_PIf));
 		//rtPrintf("%f %f %f %f\n", t, volumetricRadius, photonPower.x, (1/(M_PIf*volumetricRadius*volumetricRadius)) * photonPower.x * exp(-volRadiancePrd.sigma_t*t) * (1.f/(4.f*M_PIf)));

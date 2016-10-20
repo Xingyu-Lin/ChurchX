@@ -21,10 +21,16 @@
 
 #include <optixu/optixu_math_namespace.h>
 
-#define NUM_VOLUMETRIC_PHOTONS 2000000
-#define TOTAL_DISTANCE 1000
-#define  FRAME 48 //divisable by 4
-#define  FRAME_PACKED 36
+#define  NUM_VOLUMETRIC_PHOTONS 2000000
+#define  TOTAL_DISTANCE 1000
+#define  START_SECTION 0 // start counting from 0
+#define  TOTAL_SECTION 2
+#define  FRAME 12 // divisable by 4, number of frames in each rendering section
+                  // depending on the size of the memory
+#define  TOTAL_FRAME  (TOTAL_SECTION*FRAME)
+#define  FRAME_PACKED 9  // equals to FRAME/4*3
+//#define  PREFIX_SUM // When defined, all light beams before a time t will sum up
+
 #define  PPM_X         ( 1 << 0 )
 #define  PPM_Y         ( 1 << 1 )
 #define  PPM_Z         ( 1 << 2 )
