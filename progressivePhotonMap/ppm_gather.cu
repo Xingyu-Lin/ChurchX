@@ -97,9 +97,9 @@ RT_PROGRAM void gather()
   for (int i=0; i<FRAME_PACKED; ++i)
   {
     unpacked[4 * i] = rec.e[i].x;
-    unpacked[4 * i + 0] = rec.e[i].y;
-    unpacked[4 * i + 1] = rec.e[i].z;
-    unpacked[4 * i + 2] = rec.e[i].w;
+    unpacked[4 * i + 1] = rec.e[i].y;
+    unpacked[4 * i + 2] = rec.e[i].z;
+    unpacked[4 * i + 3] = rec.e[i].w;
   }
   for (int i =0; i<FRAME; ++i)
     rec_volumetricRadiance[i] = make_float3( unpacked[3*i], unpacked[3*i+1], unpacked[3*i+2]);
@@ -264,7 +264,7 @@ RT_PROGRAM void gather()
   //rtPrintf("%f %f\n", tmp.x, total_emitted);
   //if (tmp.x>0)
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,tmp.x, tmp.y, tmp.z);
-  output_buffer[launch_index] = make_float4(final_color[4]);
+  output_buffer[launch_index] = make_float4(final_color[2]);
   for (int i=0; i<FRAME; ++i)
     frame_output_buffer[make_uint3(launch_index, i)] = make_float4(final_color[i]);
   if(use_debug_buffer == 1)
