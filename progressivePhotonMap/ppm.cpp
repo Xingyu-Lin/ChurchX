@@ -840,7 +840,7 @@ void ProgressivePhotonScene::trace(const RayGenCameraData& camera_data)
 	}
 	m_iteration_count++;
 	printf("convergence frame...%d\n", m_iteration_count);
-	if (m_iteration_count > 1000) {
+	if (m_iteration_count > 10) {
 		GLUTDisplay::setStartRendering(true);
 		printf("rendering frame...%d\n", rendered_frame_cnt);
 		float4* framesData = reinterpret_cast<float4*>(m_frame_buffer->map());

@@ -29,7 +29,7 @@
                   // depending on the size of the memory
 #define  TOTAL_FRAME  (TOTAL_SECTION*FRAME)
 #define  FRAME_PACKED 9  // equals to FRAME/4*3
-#define  PREFIX_SUM // When defined, all light beams before a time t will sum up
+//#define  PREFIX_SUM // When defined, all light beams before a time t will sum up
 
 #define  PPM_X         ( 1 << 0 )
 #define  PPM_Y         ( 1 << 1 )
