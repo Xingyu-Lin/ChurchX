@@ -139,7 +139,7 @@ RT_PROGRAM void closestHitPhoton()
     float scatterLocationT = - logf(1-sample)/sigma_t;
     float3 scatterPosition = hitPoint + scatterLocationT*ray.direction;
 
-    photonPrd.ray_depth = -1;
+    //photonPrd.ray_depth = -1;
     int depth = photonPrd.ray_depth;
     // We need to see if anything obstructs the ray in the interval from the hitpoint to the scatter location.
     // If nothings obstructs then we scatter at eventPosition. Otherwise, the photon continues on its path and we don't do anything
@@ -154,6 +154,7 @@ RT_PROGRAM void closestHitPhoton()
 
     if(depth == photonPrd.ray_depth)
     {
+
         photonPrd.dist += scatterLocationT;
         
         const float scatterAlbedo = sigma_s/sigma_t;
@@ -162,7 +163,7 @@ RT_PROGRAM void closestHitPhoton()
         {
             return;
         }
-        //photonPrd.power *= scatterAlbedo;
+        //photonPrd.energy *= make_float3(scatterAlbedo);
 
         // Store photon at scatter location
 
@@ -176,16 +177,17 @@ RT_PROGRAM void closestHitPhoton()
             //rtPrintf("energy: %f, storeID: %d\n",photonPrd.energy.x, volumetricPhotonIdx);
 			//rtPrintf("%f %f %f : %f\n", scatterPosition.x, scatterPosition.y, scatterPosition.z, scatterLocationT);
         }
-
+        //rtPrintf("%d\n", photonPrd.ray_depth);
         // Check if we have gone above max number of photons or stack depth
-        if(photonPrd.ray_depth >=  15) //TODO:
+        if(photonPrd.ray_depth >=  3) //TODO:
         {
             return;
         }
 
         // Create the scattered ray with a direction given by importance sampling of the phase function
-
+        //rtPrintf("Hello1\n");
 		float3 scatterDirection = sampleScatterSphere(ray.direction, rnd_from_uint2(photonPrd.sample));
+        float tmp= dot(ray.direction, scatterDirection);
 
         //OPTIX_DEBUG_PRINT(photonPrd.depth-1, "Not interrupted. Store, scatter P(%.2f %.2f %.2f) D(%.2f %.2f %.2f)\n", scatterPosition.x, scatterPosition.y, scatterPosition.z,
           //                scatterDirection.x, scatterDirection.y, scatterDirection.z);

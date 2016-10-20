@@ -282,7 +282,7 @@ RT_PROGRAM void gather()
   //rtPrintf("%f %f\n", tmp.x, total_emitted);
   //if (tmp.x>0)
   //rtPrintf("Final color: (%f, %f, %f), VolRadiance: (%f, %f, %f)\n", final_color.x, final_color.y, final_color.z,tmp.x, tmp.y, tmp.z);
-  output_buffer[launch_index] = make_float4(final_color[10]);
+  output_buffer[launch_index] = make_float4(final_color[11]);
   for (int i=0; i<FRAME; ++i)
     frame_output_buffer[make_uint3(launch_index, i)] = make_float4(final_color[i]);
   if(use_debug_buffer == 1)
